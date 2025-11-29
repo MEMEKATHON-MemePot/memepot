@@ -8,10 +8,12 @@ const titleTemplate = "%s | Scaffold-ETH 2";
 export const getMetadata = ({
   title,
   description,
+  keywords,
   imageRelativePath = "/thumbnail.jpg",
 }: {
   title: string;
   description: string;
+  keywords?: string;
   imageRelativePath?: string;
 }): Metadata => {
   const imageUrl = `${baseUrl}${imageRelativePath}`;
@@ -23,6 +25,7 @@ export const getMetadata = ({
       template: titleTemplate,
     },
     description: description,
+    keywords: keywords,
     openGraph: {
       title: {
         default: title,
