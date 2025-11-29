@@ -33,7 +33,7 @@ export const RainbowKitCustomConnectButton = () => {
                   <button
                     onClick={openConnectModal}
                     type="button"
-                    className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/30 cursor-pointer flex items-center gap-2"
+                    className="px-6 py-2.5 bg-gradient-to-r from-[#9030e5] to-[#8e2af1] hover:from-[#8B2FE6] hover:to-[#6B1FB3] text-white font-semibold rounded-lg transition-all shadow-lg shadow-[#AD47FF]/30 cursor-pointer flex items-center gap-2"
                   >
                     <i className="ri-wallet-3-line text-lg"></i>
                     <span>Connect Wallet</span>
@@ -59,7 +59,7 @@ export const RainbowKitCustomConnectButton = () => {
                           color: "#ffffff",
                         }}
                       />
-                      <span className="text-xs font-medium text-cyan-400 mt-0.5">{chain.name}</span>
+                      <span className="text-xs font-medium text-[#AD47FF] mt-0.5">{chain.name}</span>
                     </div>
                   </div>
                   <AddressInfoDropdown

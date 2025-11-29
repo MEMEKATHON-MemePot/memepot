@@ -54,7 +54,7 @@ export const AddressInfoDropdown = ({
   return (
     <>
       <details ref={dropdownRef} className="dropdown dropdown-end leading-3">
-        <summary className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-cyan-500/50 text-white font-medium rounded-lg px-3 py-2.5 shadow-md dropdown-toggle gap-2 h-auto transition-all cursor-pointer flex items-center">
+        <summary className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-[#AD47FF]/50 text-white font-medium rounded-lg px-3 py-2.5 shadow-md dropdown-toggle gap-2 h-auto transition-all cursor-pointer flex items-center">
           <BlockieAvatar address={checkSumAddress} size={30} ensImage={ensAvatar} />
           <span className="ml-1 mr-1 text-sm">
             {isENS(displayName) ? displayName : checkSumAddress?.slice(0, 6) + "..." + checkSumAddress?.slice(-4)}
@@ -70,7 +70,7 @@ export const AddressInfoDropdown = ({
             >
               {isAddressCopiedToClipboard ? (
                 <>
-                  <CheckCircleIcon className="h-5 w-5 text-cyan-400" aria-hidden="true" />
+                  <CheckCircleIcon className="h-5 w-5 text-[#AD47FF]" aria-hidden="true" />
                   <span className="whitespace-nowrap text-sm">Copied!</span>
                 </>
               ) : (

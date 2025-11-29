@@ -1,5 +1,5 @@
 {
-  "name": "Scaffold-ETH 2 DApp",
-  "description": "A DApp built with Scaffold-ETH",
-  "iconPath": "logo.svg"
+  "name": "MemePot",
+  "description": "MemePot is a trusted DeFi staking platform that focuses on realistic, sustainable yields, security-first fund protection, and always-on event pools. Join 24/7 MemePot events and experience reliable rewards with a fun, culture-driven meme ecosystem.",
+  "iconPath": "memepot_logo.svg"
 }

@@ -15,10 +15,11 @@ const pacifico = Pacifico({
 });
 
 export const metadata = getMetadata({
-  title: "MEMEPOT - Deposit To Win | Guaranteed Steady Income & Thrilling Events",
+  title: "MemePot",
   description:
-    "MEMEPOT은 혁신적인 스테이킹 플랫폼으로 안정적인 수익과 흥미진진한 이벤트를 제공합니다. 지금 바로 참여하여 특별한 보상을 받아보세요. Staking, Event Pool, Rewards System을 통해 최고의 경험을 제공합니다.",
-  keywords: "MEMEPOT, 스테이킹, 암호화폐, 이벤트 풀, 보상 시스템",
+    "MemePot is a trusted DeFi staking platform that focuses on realistic, sustainable yields, security-first fund protection, and always-on event pools. Join 24/7 MemePot events and experience reliable rewards with a fun, culture-driven meme ecosystem.",
+  keywords:
+    "MemePot, DeFi staking, crypto staking, event pool, rewards system, secure DeFi, sustainable yields, meme culture",
 });
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
