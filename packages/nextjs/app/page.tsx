@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function LoadingPage() {
@@ -9,7 +8,7 @@ export default function LoadingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const duration = 5000; // 5 seconds
+    const duration = 4500; // 5 seconds
     const interval = 50; // Update every 50ms
     const increment = (interval / duration) * 100;
 
@@ -36,23 +35,17 @@ export default function LoadingPage() {
   }, [router]);
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-6 z-50">
-      <div className="w-full max-w-2xl space-y-12">
-        {/* Main Image */}
-        <div className="flex justify-center">
-          <div className="relative w-full max-w-xl aspect-square">
-            <Image
-              src="https://static.readdy.ai/image/81321a78412c64096b7e8254e4d15860/d0f6806b524c9604c0ce97623c1738cc.png"
-              alt="MEMEPOT Loading"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-        </div>
+    <div className="fixed inset-0 w-full h-full z-50">
+      {/* Full Background Video */}
+      <video autoPlay loop muted className="absolute inset-0 w-full h-full object-cover">
+        <source src="/video.webm" type="video/webm" />
+        <source src="/video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
 
-        {/* Progress Bar Section */}
-        <div className="space-y-4">
+      {/* Loading Bar Overlay */}
+      <div className="absolute inset-0 flex flex-col items-center justify-end px-6 pb-12">
+        <div className="w-full max-w-2xl space-y-4">
           {/* Progress Bar Container */}
           <div className="relative w-full h-3 bg-slate-700/50 rounded-full overflow-hidden backdrop-blur-sm border border-slate-600/30">
             {/* Progress Fill */}
@@ -67,13 +60,13 @@ export default function LoadingPage() {
 
           {/* Percentage Display */}
           <div className="text-center">
-            <span className="text-2xl font-bold text-white">{Math.round(progress)}%</span>
+            <span className="text-2xl font-bold text-white drop-shadow-lg">{Math.round(progress)}%</span>
           </div>
-        </div>
 
-        {/* Loading Text */}
-        <div className="text-center">
-          <p className="text-slate-400 text-sm font-medium animate-pulse">Loading MEMEPOT...</p>
+          {/* Loading Text */}
+          <div className="text-center">
+            <p className="text-slate-200 text-sm font-medium animate-pulse drop-shadow-lg">Loading MEMEPOT...</p>
+          </div>
         </div>
       </div>
 
