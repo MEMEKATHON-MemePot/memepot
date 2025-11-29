@@ -6,8 +6,8 @@ import "~~/styles/globals.css";
 import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
 
 export const metadata = getMetadata({
-  title: "Scaffold-ETH 2 App",
-  description: "Built with 🏗 Scaffold-ETH 2",
+  title: "MemePot - lottery dapp on memecore chain",
+  description: "A decentralized lottery application built on the Memecore blockchain using Scaffold-ETH.",
 });
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
