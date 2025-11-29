@@ -25,7 +25,7 @@ export default function LoadingPage() {
 
     // Navigate to home after 5 seconds
     const redirectTimer = setTimeout(() => {
-      router.push("/about");
+      router.push("/ready");
     }, duration);
 
     return () => {
@@ -37,7 +37,7 @@ export default function LoadingPage() {
   return (
     <div className="fixed inset-0 w-full h-full z-50">
       {/* Full Background Video */}
-      <video autoPlay loop muted className="absolute inset-0 w-full h-full object-cover">
+      <video autoPlay muted loop className="absolute inset-0 w-full h-full object-cover">
         <source src="/video.webm" type="video/webm" />
         <source src="/video.mp4" type="video/mp4" />
         Your browser does not support the video tag.
@@ -50,7 +50,7 @@ export default function LoadingPage() {
           <div className="relative w-full h-3 bg-slate-700/50 rounded-full overflow-hidden backdrop-blur-sm border border-slate-600/30">
             {/* Progress Fill */}
             <div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-blue-500 rounded-full transition-all duration-100 ease-linear shadow-lg shadow-cyan-500/50"
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#AD47FF] via-[#C966FF] to-[#8B2FE6] rounded-full transition-all duration-100 ease-linear shadow-lg shadow-[#AD47FF]/50"
               style={{ width: `${progress}%` }}
             >
               {/* Shimmer Effect */}

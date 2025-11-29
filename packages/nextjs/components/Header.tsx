@@ -43,13 +43,13 @@ export const Header = () => {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+    <header className="top-0 z-50 bg-gradient-to-b from-[#230b42] to-[#0a0514] backdrop-blur-sm border-b border-slate-800">
       <nav className="max-w-7xl mx-auto py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/about" className="flex items-center space-x-2 cursor-pointer">
-            <Image src="/logo.svg" alt="MEMEPOT Logo" width={320} height={120} className="w-40 h-15" />
-            {/* <span className="text-white font-bold text-xl">MEMEPOT</span> */}
+          <Link href="/about" className="flex items-center cursor-pointer">
+            <Image src="/memepot_logo.png" alt="MEMEPOT Logo" width={40} height={40} className="w-16 h-16" />
+            {/* <span className="text-white font-bold text-2xl">MEMEPOT</span> */}
           </Link>
 
           {/* Desktop Navigation */}
@@ -59,7 +59,7 @@ export const Header = () => {
                 key={href}
                 href={href}
                 className={`font-medium transition-colors cursor-pointer ${
-                  pathname === href ? "text-cyan-400" : "text-slate-300 hover:text-white"
+                  pathname === href ? "text-[#AD47FF]" : "text-slate-300 hover:text-white"
                 }`}
               >
                 {label}
@@ -91,7 +91,7 @@ export const Header = () => {
                 href={href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`block font-medium transition-colors cursor-pointer ${
-                  pathname === href ? "text-cyan-400" : "text-slate-300 hover:text-white"
+                  pathname === href ? "text-[#AD47FF]" : "text-slate-300 hover:text-white"
                 }`}
               >
                 {label}

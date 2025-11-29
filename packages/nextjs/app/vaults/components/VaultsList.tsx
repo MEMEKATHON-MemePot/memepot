@@ -249,13 +249,13 @@ export default function VaultsList() {
       {pools.map(pool => (
         <div
           key={pool.id}
-          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all cursor-pointer"
+          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-[#AD47FF]/50 transition-all cursor-pointer"
           onClick={() => setSelectedPool(selectedPool === pool.id ? null : pool.id)}
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Pool Info */}
             <div className="flex items-center gap-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#AD47FF] to-[#8B2FE6] rounded-lg flex items-center justify-center flex-shrink-0">
                 <i className="ri-coin-line text-white text-xl"></i>
               </div>
               <div className="flex-1 min-w-0">
@@ -271,7 +271,7 @@ export default function VaultsList() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
               <div>
                 <p className="text-slate-400 text-xs mb-1">APY</p>
-                <p className="text-cyan-400 font-bold text-lg">{pool.apy}</p>
+                <p className="text-[#AD47FF] font-bold text-lg">{pool.apy}</p>
               </div>
               <div>
                 <p className="text-slate-400 text-xs mb-1">TVL</p>
@@ -290,7 +290,7 @@ export default function VaultsList() {
             {/* Action Button */}
             <button
               className={`px-6 py-2.5 ${
-                pool.status === "active" ? "bg-cyan-500 hover:bg-cyan-600" : "bg-slate-600 cursor-not-allowed"
+                pool.status === "active" ? "bg-[#AD47FF] hover:bg-[#8B2FE6]" : "bg-slate-600 cursor-not-allowed"
               } text-white font-semibold rounded-lg transition-all whitespace-nowrap`}
               disabled={pool.status !== "active"}
             >
@@ -331,7 +331,7 @@ export default function VaultsList() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400 text-sm">Pending Rewards</span>
-                      <span className="text-cyan-400 font-semibold text-sm">0 MEME</span>
+                      <span className="text-[#AD47FF] font-semibold text-sm">0 MEME</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400 text-sm">Unlock Date</span>
@@ -342,7 +342,7 @@ export default function VaultsList() {
               </div>
 
               <div className="flex gap-3 mt-6">
-                <button className="flex-1 px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer">
+                <button className="flex-1 px-6 py-3 bg-[#AD47FF] hover:bg-[#8B2FE6] text-white font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer">
                   <i className="ri-add-line mr-2"></i>
                   Stake Now
                 </button>

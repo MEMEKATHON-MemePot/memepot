@@ -4,13 +4,13 @@ export default function VaultsStats() {
       label: "Total Value Locked",
       value: "$45,234,567",
       icon: "ri-safe-2-line",
-      color: "from-cyan-400 to-blue-500",
+      color: "from-[#AD47FF] to-[#8B2FE6]",
     },
     {
       label: "Total Stakers",
       value: "12,456",
       icon: "ri-group-line",
-      color: "from-purple-400 to-pink-500",
+      color: "from-[#AD47FF] to-[#E8C9FF]",
     },
     {
       label: "Average APY",
@@ -31,7 +31,7 @@ export default function VaultsStats() {
       {stats.map(stat => (
         <div
           key={stat.label}
-          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all"
+          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-[#AD47FF]/50 transition-all"
         >
           <div className="flex items-start justify-between mb-4">
             <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-lg flex items-center justify-center`}>

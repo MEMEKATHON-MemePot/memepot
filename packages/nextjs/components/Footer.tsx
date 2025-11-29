@@ -46,7 +46,7 @@ export const Footer = () => {
           {/* Brand Column */}
           <div className="col-span-2 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#AD47FF] to-[#8B2FE6] rounded-lg flex items-center justify-center">
                 <i className="ri-trophy-fill text-white text-xl"></i>
               </div>
               <span className="text-2xl font-bold text-white" style={{ fontFamily: '"Pacifico", serif' }}>
@@ -61,7 +61,7 @@ export const Footer = () => {
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="w-10 h-10 bg-slate-800 hover:bg-cyan-500 rounded-lg flex items-center justify-center transition-colors cursor-pointer group"
+                  className="w-10 h-10 bg-slate-800 hover:bg-[#AD47FF] rounded-lg flex items-center justify-center transition-colors cursor-pointer group"
                 >
                   <i className={`${social.icon} text-slate-400 group-hover:text-white text-lg`}></i>
                 </a>
@@ -77,7 +77,7 @@ export const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 text-sm transition-colors cursor-pointer"
+                    className="text-slate-400 hover:text-[#AD47FF] text-sm transition-colors cursor-pointer"
                   >
                     {link.name}
                   </a>
@@ -93,7 +93,7 @@ export const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 text-sm transition-colors cursor-pointer"
+                    className="text-slate-400 hover:text-[#AD47FF] text-sm transition-colors cursor-pointer"
                   >
                     {link.name}
                   </a>
@@ -109,7 +109,7 @@ export const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 text-sm transition-colors cursor-pointer"
+                    className="text-slate-400 hover:text-[#AD47FF] text-sm transition-colors cursor-pointer"
                   >
                     {link.name}
                   </a>
@@ -125,7 +125,7 @@ export const Footer = () => {
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-slate-400 hover:text-cyan-400 text-sm transition-colors cursor-pointer"
+                    className="text-slate-400 hover:text-[#AD47FF] text-sm transition-colors cursor-pointer"
                   >
                     {link.name}
                   </a>
