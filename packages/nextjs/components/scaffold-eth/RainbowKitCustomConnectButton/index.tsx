@@ -8,7 +8,6 @@ import { WrongNetworkDropdown } from "./WrongNetworkDropdown";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Balance } from "@scaffold-ui/components";
 import { Address } from "viem";
-import { useNetworkColor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
 
@@ -16,7 +15,6 @@ import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
  * Custom Wagmi Connect Button (watch balance + custom design)
  */
 export const RainbowKitCustomConnectButton = () => {
-  const networkColor = useNetworkColor();
   const { targetNetwork } = useTargetNetwork();
 
   return (
@@ -32,8 +30,13 @@ export const RainbowKitCustomConnectButton = () => {
             {(() => {
               if (!connected) {
                 return (
-                  <button className="btn btn-primary btn-sm" onClick={openConnectModal} type="button">
-                    Connect Wallet
+                  <button
+                    onClick={openConnectModal}
+                    type="button"
+                    className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold rounded-lg transition-all shadow-lg shadow-cyan-500/30 cursor-pointer flex items-center gap-2"
+                  >
+                    <i className="ri-wallet-3-line text-lg"></i>
+                    <span>Connect Wallet</span>
                   </button>
                 );
               }
@@ -44,18 +47,20 @@ export const RainbowKitCustomConnectButton = () => {
 
               return (
                 <>
-                  <div className="flex flex-col items-center mr-2">
-                    <Balance
-                      address={account.address as Address}
-                      style={{
-                        minHeight: "0",
-                        height: "auto",
-                        fontSize: "0.8em",
-                      }}
-                    />
-                    <span className="text-xs" style={{ color: networkColor }}>
-                      {chain.name}
-                    </span>
+                  <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg px-4 py-2.5 mr-2">
+                    <div className="flex flex-col items-end">
+                      <Balance
+                        address={account.address as Address}
+                        style={{
+                          minHeight: "0",
+                          height: "auto",
+                          fontSize: "0.875rem",
+                          fontWeight: "600",
+                          color: "#ffffff",
+                        }}
+                      />
+                      <span className="text-xs font-medium text-cyan-400 mt-0.5">{chain.name}</span>
+                    </div>
                   </div>
                   <AddressInfoDropdown
                     address={account.address as Address}
