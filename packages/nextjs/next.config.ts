@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "static.readdy.ai",
       },
+      {
+        protocol: "https",
+        hostname: "readdy.ai",
+      },
     ],
   },
   webpack: config => {
