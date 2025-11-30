@@ -1,190 +1,341 @@
-export default function PrizeStatusSection() {
-  const prizeParticipations = [
-    {
-      pool: "Daily Mega Draw",
-      tickets: 24,
-      nextDraw: "8h 32m",
-      winChance: "0.48%",
-      prize: "$5,000",
-      status: "Active",
-    },
-    {
-      pool: "Weekly Grand Prize",
-      tickets: 18,
-      nextDraw: "3d 12h",
-      winChance: "0.36%",
-      prize: "$50,000",
-      status: "Active",
-    },
-    {
-      pool: "Monthly Jackpot",
-      tickets: 12,
-      nextDraw: "18d 5h",
-      winChance: "0.24%",
-      prize: "$200,000",
-      status: "Active",
-    },
-  ];
+import { useEffect, useMemo, useState } from "react";
+import PrizeParticipationModal from "./PrizeParticipationModal";
+import PrizeWinningsModal from "./PrizeWinningsModal";
+import TransactionProgressModal from "~~/components/TransactionProgressModal";
 
-  const winnings = [
+interface Prize {
+  name: string;
+  totalPrize: string;
+  currency: string;
+  userTickets: number;
+  winChance: string;
+  nextDraw: string;
+}
+
+interface Winning {
+  poolName: string;
+  amount: string;
+  currency: string;
+  place: string;
+  gradient: string;
+  status: "pending" | "claimed";
+  date: string;
+}
+
+export default function PrizeStatusSection() {
+  const [showParticipationModal, setShowParticipationModal] = useState(false);
+  const [showWinningsModal, setShowWinningsModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
+  const [selectedWinning, setSelectedWinning] = useState<Winning | null>(null);
+  const [transactionSteps, setTransactionSteps] = useState<
+    Array<{ id: string; label: string; status: "pending" | "processing" | "completed" | "failed" }>
+  >([
+    { id: "1", label: "Approve Token", status: "pending" },
+    { id: "2", label: "Send Transaction", status: "pending" },
+  ]);
+
+  const activePrizes = useMemo<Prize[]>(
+    () => [
+      {
+        name: "Daily Mega Draw",
+        totalPrize: "5,000",
+        currency: "USDT",
+        userTickets: 24,
+        winChance: "0.48%",
+        nextDraw: new Date(Date.now() + 8 * 60 * 60 * 1000 + 32 * 60 * 1000).toISOString(),
+      },
+      {
+        name: "Weekly Grand Prize",
+        totalPrize: "50,000",
+        currency: "USDC",
+        userTickets: 18,
+        winChance: "0.36%",
+        nextDraw: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        name: "Monthly Jackpot",
+        totalPrize: "200,000",
+        currency: "ETH",
+        userTickets: 12,
+        winChance: "0.24%",
+        nextDraw: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000 + 5 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    [],
+  );
+
+  const [prizeWinnings, setPrizeWinnings] = useState<Winning[]>([
     {
-      pool: "Daily Mega Draw",
+      poolName: "Daily Mega Draw",
+      amount: "25.50",
+      currency: "USDT",
+      place: "5th Place",
+      gradient: "from-green-600 to-emerald-600",
+      status: "claimed",
       date: "2024-01-15",
-      amount: "$25.50",
-      status: "Claimed",
     },
     {
-      pool: "Weekly Grand Prize",
+      poolName: "Weekly Grand Prize",
+      amount: "9.05",
+      currency: "USDC",
+      place: "8th Place",
+      gradient: "from-blue-600 to-cyan-600",
+      status: "pending",
       date: "2024-01-10",
-      amount: "$9.05",
-      status: "Unclaimed",
     },
-  ];
+  ]);
+
+  const [countdowns, setCountdowns] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    const updateCountdowns = () => {
+      const newCountdowns: { [key: string]: string } = {};
+      activePrizes.forEach(prize => {
+        const now = new Date().getTime();
+        const drawTime = new Date(prize.nextDraw).getTime();
+        const difference = drawTime - now;
+
+        if (difference > 0) {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+          if (days > 0) {
+            newCountdowns[prize.name] = `${days}d ${hours}h`;
+          } else {
+            newCountdowns[prize.name] = `${hours}h ${minutes}m`;
+          }
+        } else {
+          newCountdowns[prize.name] = "Drawing...";
+        }
+      });
+      setCountdowns(newCountdowns);
+    };
+
+    updateCountdowns();
+    const timer = setInterval(updateCountdowns, 60000);
+    return () => clearInterval(timer);
+  }, [activePrizes]);
+
+  const handleViewDetails = (prize: Prize) => {
+    setSelectedPrize(prize);
+    setShowParticipationModal(true);
+  };
+
+  const handleClaimPrize = (winning: Winning) => {
+    setSelectedWinning(winning);
+    setShowWinningsModal(true);
+  };
+
+  const handleTransactionStart = () => {
+    setShowWinningsModal(false);
+
+    setTransactionSteps([
+      { id: "1", label: "Approve Token", status: "processing" },
+      { id: "2", label: "Send Transaction", status: "pending" },
+    ]);
+    setShowTransactionModal(true);
+
+    setTimeout(() => {
+      setTransactionSteps([
+        { id: "1", label: "Approve Token", status: "completed" },
+        { id: "2", label: "Send Transaction", status: "processing" },
+      ]);
+
+      setTimeout(() => {
+        setTransactionSteps([
+          { id: "1", label: "Approve Token", status: "completed" },
+          { id: "2", label: "Send Transaction", status: "completed" },
+        ]);
+
+        setTimeout(() => {
+          setShowTransactionModal(false);
+
+          // Update winning status to claimed
+          if (selectedWinning) {
+            setPrizeWinnings(prev =>
+              prev.map(w =>
+                w.poolName === selectedWinning.poolName && w.date === selectedWinning.date
+                  ? { ...w, status: "claimed" as const }
+                  : w,
+              ),
+            );
+          }
+        }, 1500);
+      }, 2000);
+    }, 2000);
+  };
 
   return (
-    <section className="relative z-10 px-6 pb-20">
-      <div className="max-w-7xl mx-auto space-y-12">
-        {/* Prize Pool Participation */}
-        <div>
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-white mb-2">Prize Pool Participation</h2>
-            <p className="text-gray-400">Your active entries in ongoing prize draws</p>
-          </div>
-
-          <div className="rounded-2xl bg-[#1a0b2e]/60 border border-pink-500/20 backdrop-blur-sm overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-6 gap-4 px-8 py-4 bg-pink-900/20 border-b border-pink-500/20">
-              <div className="text-center text-gray-400 text-sm font-semibold">Prize Pool</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Your Tickets</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Next Draw</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Win Chance</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Prize Amount</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Status</div>
-            </div>
-
-            {/* Table Body */}
-            <div className="divide-y divide-pink-500/10">
-              {prizeParticipations.map((participation, index) => (
-                <div key={index} className="grid grid-cols-6 gap-4 px-8 py-6 hover:bg-pink-500/5 transition-colors">
-                  {/* Prize Pool */}
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-white font-semibold">{participation.pool}</div>
-                    </div>
-                  </div>
-
-                  {/* Your Tickets */}
-                  <div className="flex items-center justify-center">
-                    <div className="px-3 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/30">
-                      <span className="text-cyan-400 font-semibold">{participation.tickets}</span>
-                    </div>
-                  </div>
-
-                  {/* Next Draw */}
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-white font-semibold">{participation.nextDraw}</div>
-                    </div>
-                  </div>
-
-                  {/* Win Chance */}
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-purple-400 font-semibold">{participation.winChance}</div>
-                    </div>
-                  </div>
-
-                  {/* Prize Amount */}
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-pink-400 font-bold text-lg">{participation.prize}</div>
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div className="flex items-center justify-center">
-                    <div className="px-3 py-1 rounded-lg bg-green-500/20 border border-green-500/30">
-                      <span className="text-green-400 font-semibold">{participation.status}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="space-y-12">
+      {/* Prize Winnings */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Prize Winnings</h2>
+          <span className="text-sm text-gray-400">{prizeWinnings.length} Total Winnings</span>
         </div>
 
-        {/* Prize Winnings */}
-        <div>
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-white mb-2">Prize Winnings</h2>
-            <p className="text-gray-400">Your prize history and claimable rewards</p>
+        <div className="bg-gradient-to-br from-[#1a0a2e]/80 to-[#0a0118]/80 backdrop-blur-sm rounded-2xl border border-purple-500/30 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-purple-500/20">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-400">Prize Pool</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Date</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Amount</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Status</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prizeWinnings.map((winning, index) => (
+                  <tr key={index} className="border-b border-purple-500/10 hover:bg-purple-500/5 transition-all">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 bg-gradient-to-br ${winning.gradient} rounded-lg flex items-center justify-center shrink-0`}
+                        >
+                          <i className="ri-trophy-fill text-white text-lg"></i>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">{winning.poolName}</p>
+                          <p className="text-sm text-gray-400">{winning.place}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <p className="font-semibold text-gray-300">{winning.date}</p>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <p className="font-semibold text-green-400">
+                        ${winning.amount} {winning.currency}
+                      </p>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      {winning.status === "claimed" ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-500/20 text-gray-400 rounded-full text-sm font-semibold">
+                          <i className="ri-check-line text-xs"></i>
+                          Claimed
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm font-semibold">
+                          <i className="ri-time-line text-xs"></i>
+                          Unclaimed
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      {winning.status === "pending" ? (
+                        <button
+                          onClick={() => handleClaimPrize(winning)}
+                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90 rounded-lg font-semibold transition-all flex items-center gap-2 mx-auto whitespace-nowrap cursor-pointer"
+                        >
+                          <i className="ri-hand-coin-line"></i>
+                          Claim
+                        </button>
+                      ) : (
+                        <span className="text-gray-500 text-sm">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
+      </section>
 
-          <div className="rounded-2xl bg-[#1a0b2e]/60 border border-cyan-500/20 backdrop-blur-sm overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-5 gap-4 px-8 py-4 bg-cyan-900/20 border-b border-cyan-500/20">
-              <div className="text-center text-gray-400 text-sm font-semibold">Prize Pool</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Date</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Amount</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Status</div>
-              <div className="text-center text-gray-400 text-sm font-semibold">Action</div>
-            </div>
+      {/* Prize Pool Participation */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Prize Pool Participation</h2>
+          <span className="text-sm text-gray-400">{activePrizes.length} Active Entries</span>
+        </div>
 
-            {/* Table Body */}
-            <div className="divide-y divide-cyan-500/10">
-              {winnings.map((winning, index) => (
-                <div key={index} className="grid grid-cols-5 gap-4 px-8 py-6 hover:bg-cyan-500/5 transition-colors">
-                  {/* Prize Pool */}
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-white font-semibold">{winning.pool}</div>
-                    </div>
-                  </div>
-
-                  {/* Date */}
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-gray-400">{winning.date}</div>
-                    </div>
-                  </div>
-
-                  {/* Amount */}
-                  <div className="flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-cyan-400 font-bold text-lg">{winning.amount}</div>
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div className="flex items-center justify-center">
-                    {winning.status === "Claimed" ? (
-                      <div className="px-3 py-1 rounded-lg bg-gray-500/20 border border-gray-500/30">
-                        <span className="text-gray-400 font-semibold">{winning.status}</span>
+        <div className="bg-gradient-to-br from-[#1a0a2e]/80 to-[#0a0118]/80 backdrop-blur-sm rounded-2xl border border-purple-500/30 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-purple-500/20">
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-gray-400">Prize Pool</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Your Tickets</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Next Draw</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Win Chance</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Prize Amount</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Status</th>
+                  <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activePrizes.map((prize, index) => (
+                  <tr key={index} className="border-b border-purple-500/10 hover:bg-purple-500/5 transition-all">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-600 to-orange-600 rounded-lg flex items-center justify-center shrink-0">
+                          <i className="ri-trophy-fill text-white text-lg"></i>
+                        </div>
+                        <p className="font-semibold text-white">{prize.name}</p>
                       </div>
-                    ) : (
-                      <div className="px-3 py-1 rounded-lg bg-pink-500/20 border border-pink-500/30 animate-pulse">
-                        <span className="text-pink-400 font-semibold">{winning.status}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Action */}
-                  <div className="flex items-center justify-center">
-                    {winning.status === "Unclaimed" ? (
-                      <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-pink-600 text-white text-sm font-semibold hover:from-cyan-500 hover:to-pink-500 transition-all hover:shadow-lg hover:shadow-cyan-500/50 whitespace-nowrap cursor-pointer">
-                        <i className="ri-hand-coin-line mr-1"></i>
-                        Claim
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <p className="font-semibold text-purple-400">{prize.userTickets}</p>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <p className="font-semibold text-cyan-400">{countdowns[prize.name] || "Loading..."}</p>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <p className="font-semibold text-yellow-400">{prize.winChance}</p>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <p className="font-semibold text-white">
+                        ${prize.totalPrize} {prize.currency}
+                      </p>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-semibold">
+                        <i className="ri-checkbox-circle-fill text-xs"></i>
+                        Active
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <button
+                        onClick={() => handleViewDetails(prize)}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-all flex items-center gap-2 mx-auto whitespace-nowrap cursor-pointer"
+                      >
+                        <i className="ri-eye-line"></i>
+                        View Details
                       </button>
-                    ) : (
-                      <span className="text-gray-500 text-sm">—</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Modals */}
+      {showParticipationModal && selectedPrize && (
+        <PrizeParticipationModal prize={selectedPrize} onClose={() => setShowParticipationModal(false)} />
+      )}
+
+      {/* Prize Winnings Modal */}
+      {showWinningsModal && selectedWinning && (
+        <PrizeWinningsModal
+          winnings={selectedWinning}
+          onClose={() => setShowWinningsModal(false)}
+          onClaim={handleTransactionStart}
+        />
+      )}
+
+      {showTransactionModal && (
+        <TransactionProgressModal
+          isOpen={showTransactionModal}
+          steps={transactionSteps}
+          onClose={() => setShowTransactionModal(false)}
+        />
+      )}
+    </div>
   );
 }
