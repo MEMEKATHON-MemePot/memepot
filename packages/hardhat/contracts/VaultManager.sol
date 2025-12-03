@@ -22,18 +22,18 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
 
     // Vault information for each token
     struct VaultInfo {
-        bool isActive;
-        uint256 totalDeposits;
-        uint256 baseAPR; // in basis points (e.g., 420 = 4.20%)
-        uint256 ticketAPR; // in basis points (e.g., 280 = 2.80%)
-        uint256 maxDepositPerUser;
+        bool isActive;                  // 1 byte
+        uint16 baseAPR;                 // 2 bytes - max 65535 bps (655.35%)
+        uint16 ticketAPR;               // 2 bytes - max 65535 bps (655.35%)
+        uint96 totalDeposits;           // 12 bytes - sufficient for most tokens
+        uint96 maxDepositPerUser;       // 12 bytes
     }
 
     // User deposit information
     struct UserDeposit {
-        uint256 amount;
-        uint256 depositTime;
-        uint256 lastRewardClaim;
+        uint128 amount;                 // 16 bytes - sufficient for most deposit amounts
+        uint64 depositTime;             // 8 bytes - valid until year 584 billion
+        uint64 lastRewardClaim;         // 8 bytes
     }
 
     // Token address => VaultInfo
@@ -41,6 +41,9 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
 
     // User address => Token address => UserDeposit
     mapping(address => mapping(address => UserDeposit)) public userDeposits;
+
+    // User address => Token address => Pending withdrawal amount (for failed native token transfers)
+    mapping(address => mapping(address => uint256)) public pendingWithdrawals;
 
     // Supported tokens list
     address[] public supportedTokens;
@@ -56,6 +59,8 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
     event VaultUpdated(address indexed token, uint256 baseAPR, uint256 ticketAPR);
     event Deposited(address indexed user, address indexed token, uint256 amount);
     event Withdrawn(address indexed user, address indexed token, uint256 amount);
+    event WithdrawalPending(address indexed user, address indexed token, uint256 amount);
+    event WithdrawalClaimed(address indexed user, address indexed token, uint256 amount);
     event YieldGeneratorUpdated(address indexed oldAddress, address indexed newAddress);
     event RewardsManagerUpdated(address indexed oldAddress, address indexed newAddress);
 
@@ -83,10 +88,10 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
 
         vaults[token] = VaultInfo({
             isActive: true,
+            baseAPR: uint16(baseAPR),
+            ticketAPR: uint16(ticketAPR),
             totalDeposits: 0,
-            baseAPR: baseAPR,
-            ticketAPR: ticketAPR,
-            maxDepositPerUser: maxDepositPerUser
+            maxDepositPerUser: uint96(maxDepositPerUser)
         });
 
         supportedTokens.push(token);
@@ -108,8 +113,8 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
         require(vaults[token].isActive, "VaultManager: Vault not active");
         require(baseAPR + ticketAPR <= 10000, "VaultManager: Total APR exceeds 100%");
 
-        vaults[token].baseAPR = baseAPR;
-        vaults[token].ticketAPR = ticketAPR;
+        vaults[token].baseAPR = uint16(baseAPR);
+        vaults[token].ticketAPR = uint16(ticketAPR);
 
         emit VaultUpdated(token, baseAPR, ticketAPR);
     }
@@ -138,13 +143,13 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
 
         // Update user deposit
         if (userDeposit.amount == 0) {
-            userDeposit.depositTime = block.timestamp;
-            userDeposit.lastRewardClaim = block.timestamp;
+            userDeposit.depositTime = uint64(block.timestamp);
+            userDeposit.lastRewardClaim = uint64(block.timestamp);
         }
-        userDeposit.amount += amount;
+        userDeposit.amount += uint128(amount);
 
         // Update vault total deposits
-        vaults[token].totalDeposits += amount;
+        vaults[token].totalDeposits += uint96(amount);
 
         // Transfer to YieldGenerator if set
         if (yieldGenerator != address(0)) {
@@ -173,13 +178,13 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
 
         // Update user deposit
         if (userDeposit.amount == 0) {
-            userDeposit.depositTime = block.timestamp;
-            userDeposit.lastRewardClaim = block.timestamp;
+            userDeposit.depositTime = uint64(block.timestamp);
+            userDeposit.lastRewardClaim = uint64(block.timestamp);
         }
-        userDeposit.amount += msg.value;
+        userDeposit.amount += uint128(msg.value);
 
         // Update vault total deposits
-        vaults[NATIVE_TOKEN].totalDeposits += msg.value;
+        vaults[NATIVE_TOKEN].totalDeposits += uint96(msg.value);
 
         // Transfer to YieldGenerator if set
         if (yieldGenerator != address(0)) {
@@ -206,21 +211,44 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
         require(withdrawAmount > 0, "VaultManager: Withdrawal amount is 0");
 
         // Update user deposit
-        userDeposit.amount -= withdrawAmount;
+        userDeposit.amount -= uint128(withdrawAmount);
 
         // Update vault total deposits
-        vaults[token].totalDeposits -= withdrawAmount;
+        vaults[token].totalDeposits -= uint96(withdrawAmount);
 
         // Transfer tokens back to user
         // In production, this would request withdrawal from YieldGenerator
         if (token == NATIVE_TOKEN) {
+            // Use pull pattern for native token to prevent DoS
             (bool success, ) = msg.sender.call{value: withdrawAmount}("");
-            require(success, "VaultManager: Native token transfer failed");
+            if (!success) {
+                // If transfer fails, mark as pending withdrawal
+                pendingWithdrawals[msg.sender][token] += withdrawAmount;
+                emit WithdrawalPending(msg.sender, token, withdrawAmount);
+            } else {
+                emit Withdrawn(msg.sender, token, withdrawAmount);
+            }
         } else {
             IERC20(token).safeTransfer(msg.sender, withdrawAmount);
+            emit Withdrawn(msg.sender, token, withdrawAmount);
         }
+    }
 
-        emit Withdrawn(msg.sender, token, withdrawAmount);
+    /**
+     * @notice Claim pending native token withdrawal
+     */
+    function claimPendingWithdrawal() external nonReentrant whenNotPaused {
+        uint256 pendingAmount = pendingWithdrawals[msg.sender][NATIVE_TOKEN];
+        require(pendingAmount > 0, "VaultManager: No pending withdrawal");
+
+        // Reset pending withdrawal before transfer (CEI pattern)
+        pendingWithdrawals[msg.sender][NATIVE_TOKEN] = 0;
+
+        // Attempt transfer
+        (bool success, ) = msg.sender.call{value: pendingAmount}("");
+        require(success, "VaultManager: Native token transfer failed");
+
+        emit WithdrawalClaimed(msg.sender, NATIVE_TOKEN, pendingAmount);
     }
 
     /**

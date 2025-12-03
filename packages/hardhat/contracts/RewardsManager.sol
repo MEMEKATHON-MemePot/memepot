@@ -22,11 +22,14 @@ contract RewardsManager is AccessControl, ReentrancyGuard, Pausable {
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
+    // Maximum tokens to claim at once (DoS protection)
+    uint256 public constant MAX_TOKENS_PER_CLAIM = 20;
+
     // User reward information per token
     struct UserReward {
-        uint256 accruedReward;
-        uint256 lastUpdateTime;
-        uint256 rewardDebt;
+        uint128 accruedReward;          // 16 bytes - sufficient for reward amounts
+        uint64 lastUpdateTime;          // 8 bytes - valid until year 584 billion
+        uint128 rewardDebt;             // 16 bytes
     }
 
     // VaultManager contract
@@ -103,11 +106,11 @@ contract RewardsManager is AccessControl, ReentrancyGuard, Pausable {
 
         if (pending > reward.accruedReward) {
             uint256 newReward = pending - reward.accruedReward;
-            reward.accruedReward = pending;
+            reward.accruedReward = uint128(pending);
             emit RewardAccrued(user, token, newReward);
         }
 
-        reward.lastUpdateTime = block.timestamp;
+        reward.lastUpdateTime = uint64(block.timestamp);
     }
 
     /**
@@ -142,6 +145,7 @@ contract RewardsManager is AccessControl, ReentrancyGuard, Pausable {
      */
     function claimAllRewards(address[] calldata tokens) external nonReentrant whenNotPaused {
         require(tokens.length > 0, "RewardsManager: Empty tokens array");
+        require(tokens.length <= MAX_TOKENS_PER_CLAIM, "RewardsManager: Too many tokens");
 
         uint256[] memory amounts = new uint256[](tokens.length);
 
@@ -213,7 +217,7 @@ contract RewardsManager is AccessControl, ReentrancyGuard, Pausable {
         UserReward storage reward = userRewards[user][token];
 
         if (reward.lastUpdateTime == 0) {
-            reward.lastUpdateTime = block.timestamp;
+            reward.lastUpdateTime = uint64(block.timestamp);
         }
     }
 

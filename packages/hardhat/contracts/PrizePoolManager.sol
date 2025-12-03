@@ -43,16 +43,16 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
 
     struct PrizePool {
         string name;
-        address token;
-        uint256 totalPrize;
-        DrawFrequency frequency;
-        uint256 drawInterval;
-        uint256 nextDrawTime;
-        uint256 lastDrawTime;
-        PoolStatus status;
-        uint256 totalParticipants;
-        uint256 totalTickets;
-        uint256 drawCount;
+        address token;                  // 20 bytes
+        PoolStatus status;              // 1 byte - packed with token
+        DrawFrequency frequency;        // 1 byte - packed with token
+        uint96 totalPrize;              // 12 bytes - sufficient for most tokens (79B tokens with 18 decimals)
+        uint32 drawInterval;            // 4 bytes - max 136 years in seconds
+        uint48 nextDrawTime;            // 6 bytes - valid until year 8921
+        uint48 lastDrawTime;            // 6 bytes
+        uint64 totalParticipants;       // 8 bytes - max 18.4 quintillion participants
+        uint64 totalTickets;            // 8 bytes
+        uint32 drawCount;               // 4 bytes - max 4.2 billion draws
     }
 
     struct DrawResult {
@@ -62,6 +62,12 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
         uint256[] prizes;
         uint256 timestamp;
         bytes32 randomness; // For VRF integration
+    }
+
+    struct DrawCommit {
+        bytes32 commitHash;
+        uint256 commitTime;
+        bool revealed;
     }
 
     struct UserParticipation {
@@ -85,11 +91,23 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
     // Pool ID => User => Prize amount
     mapping(uint256 => mapping(address => uint256)) public userPrizes;
 
+    // Pool ID => Draw Number => DrawCommit
+    mapping(uint256 => mapping(uint256 => DrawCommit)) public drawCommits;
+
     // Counter for pool IDs
     uint256 public poolCounter;
 
+    // Minimum time between commit and reveal (prevents manipulation)
+    uint256 public constant MIN_COMMIT_REVEAL_DELAY = 1 hours;
+
     // Ticket conversion rate (amount per ticket per week)
     uint256 public ticketConversionRate = 10 * 10**18; // 10 tokens = 1 ticket per week
+
+    // Maximum tickets per transaction (DoS protection)
+    uint256 public constant MAX_TICKETS_PER_TX = 100;
+
+    // Maximum winners per draw (DoS protection)
+    uint256 public constant MAX_WINNERS_PER_DRAW = 50;
 
     // Events
     event PoolCreated(
@@ -104,6 +122,8 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
     event DrawExecuted(uint256 indexed poolId, uint256 drawNumber, address[] winners, uint256[] prizes);
     event PrizeClaimed(uint256 indexed poolId, address indexed user, uint256 amount);
     event PoolStatusChanged(uint256 indexed poolId, PoolStatus oldStatus, PoolStatus newStatus);
+    event DrawCommitted(uint256 indexed poolId, uint256 drawNumber, bytes32 commitHash);
+    event DrawRevealed(uint256 indexed poolId, uint256 drawNumber, bytes32 randomness);
 
     constructor(address _ticketNFT) {
         require(_ticketNFT != address(0), "PrizePoolManager: Invalid TicketNFT address");
@@ -137,12 +157,12 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
         prizePools[poolId] = PrizePool({
             name: name,
             token: token,
-            totalPrize: totalPrize,
-            frequency: frequency,
-            drawInterval: drawInterval,
-            nextDrawTime: block.timestamp + drawInterval,
-            lastDrawTime: 0,
             status: PoolStatus.Active,
+            frequency: frequency,
+            totalPrize: uint96(totalPrize),
+            drawInterval: uint32(drawInterval),
+            nextDrawTime: uint48(block.timestamp + drawInterval),
+            lastDrawTime: 0,
             totalParticipants: 0,
             totalTickets: 0,
             drawCount: 0
@@ -164,7 +184,7 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
         require(amount > 0, "PrizePoolManager: Invalid amount");
 
         IERC20(pool.token).safeTransferFrom(msg.sender, address(this), amount);
-        pool.totalPrize += amount;
+        pool.totalPrize += uint96(amount);
 
         emit PoolFunded(poolId, amount);
     }
@@ -183,6 +203,7 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
         PrizePool storage pool = prizePools[poolId];
         require(pool.status == PoolStatus.Active, "PrizePoolManager: Pool not active");
         require(ticketCount > 0, "PrizePoolManager: Invalid ticket count");
+        require(ticketCount <= MAX_TICKETS_PER_TX, "PrizePoolManager: Too many tickets");
 
         UserParticipation storage participation = userParticipations[poolId][user];
 
@@ -199,27 +220,70 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
         if (participation.ticketCount == ticketCount) {
             pool.totalParticipants++;
         }
-        pool.totalTickets += ticketCount;
+        pool.totalTickets += uint64(ticketCount);
 
         emit TicketsIssued(poolId, user, ticketCount);
     }
 
     /**
-     * @notice Execute a draw (simplified version without VRF)
+     * @notice Commit to a draw (step 1 of 2-phase commit-reveal)
      * @param poolId The pool ID
+     * @param commitHash Hash of (secret + winners + prizes)
+     */
+    function commitDraw(uint256 poolId, bytes32 commitHash) external onlyRole(DRAWER_ROLE) {
+        PrizePool storage pool = prizePools[poolId];
+        require(pool.status == PoolStatus.Active, "PrizePoolManager: Pool not active");
+        require(block.timestamp >= pool.nextDrawTime, "PrizePoolManager: Draw time not reached");
+        require(commitHash != bytes32(0), "PrizePoolManager: Invalid commit hash");
+
+        uint256 drawNumber = pool.drawCount;
+        require(!drawCommits[poolId][drawNumber].revealed, "PrizePoolManager: Draw already revealed");
+
+        drawCommits[poolId][drawNumber] = DrawCommit({
+            commitHash: commitHash,
+            commitTime: block.timestamp,
+            revealed: false
+        });
+
+        emit DrawCommitted(poolId, drawNumber, commitHash);
+    }
+
+    /**
+     * @notice Execute a draw (step 2 of 2-phase commit-reveal)
+     * @param poolId The pool ID
+     * @param secret The secret used in commit
      * @param winners Array of winner addresses
      * @param prizes Array of prize amounts
      */
     function executeDraw(
         uint256 poolId,
+        bytes32 secret,
         address[] calldata winners,
         uint256[] calldata prizes
     ) external onlyRole(DRAWER_ROLE) nonReentrant {
         PrizePool storage pool = prizePools[poolId];
         require(pool.status == PoolStatus.Active, "PrizePoolManager: Pool not active");
-        require(block.timestamp >= pool.nextDrawTime, "PrizePoolManager: Draw time not reached");
         require(winners.length == prizes.length, "PrizePoolManager: Array length mismatch");
         require(winners.length > 0, "PrizePoolManager: No winners");
+        require(winners.length <= MAX_WINNERS_PER_DRAW, "PrizePoolManager: Too many winners");
+
+        uint256 drawNumber = pool.drawCount;
+        DrawCommit storage commit = drawCommits[poolId][drawNumber];
+
+        // Verify commit-reveal
+        require(commit.commitTime > 0, "PrizePoolManager: No commit found");
+        require(!commit.revealed, "PrizePoolManager: Draw already revealed");
+        require(
+            block.timestamp >= commit.commitTime + MIN_COMMIT_REVEAL_DELAY,
+            "PrizePoolManager: Reveal too soon"
+        );
+
+        // Verify commit hash matches reveal
+        bytes32 revealHash = keccak256(abi.encodePacked(secret, winners, prizes));
+        require(revealHash == commit.commitHash, "PrizePoolManager: Invalid reveal");
+
+        // Mark as revealed
+        commit.revealed = true;
 
         // Validate total prizes
         uint256 totalPrizeAmount = 0;
@@ -232,15 +296,16 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
         pool.status = PoolStatus.Drawing;
 
         // Record draw result
-        uint256 drawNumber = pool.drawCount;
         drawResults[poolId][drawNumber] = DrawResult({
             poolId: poolId,
             drawNumber: drawNumber,
             winners: winners,
             prizes: prizes,
             timestamp: block.timestamp,
-            randomness: bytes32(0) // Placeholder for VRF
+            randomness: secret
         });
+
+        emit DrawRevealed(poolId, drawNumber, secret);
 
         // Distribute prizes
         for (uint256 i = 0; i < winners.length; i++) {
@@ -249,9 +314,9 @@ contract PrizePoolManager is AccessControl, ReentrancyGuard, Pausable {
 
         // Update pool
         pool.drawCount++;
-        pool.lastDrawTime = block.timestamp;
-        pool.nextDrawTime = block.timestamp + pool.drawInterval;
-        pool.totalPrize -= totalPrizeAmount;
+        pool.lastDrawTime = uint48(block.timestamp);
+        pool.nextDrawTime = uint48(block.timestamp + pool.drawInterval);
+        pool.totalPrize -= uint96(totalPrizeAmount);
         pool.status = PoolStatus.Active;
 
         emit DrawExecuted(poolId, drawNumber, winners, prizes);

@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 
 interface IRewardsManager {
     function initializeUserRewards(address user, address token) external;
+    function fundRewardPool(address token, uint256 amount) external;
 }
 
 interface IPrizePoolManager {
@@ -25,15 +26,18 @@ contract YieldGenerator is AccessControl, ReentrancyGuard, Pausable {
 
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
+    // Maximum tokens to harvest at once (DoS protection)
+    uint256 public constant MAX_HARVEST_BATCH = 20;
+
     struct YieldConfig {
-        bool isActive;
-        uint256 baseAPR; // in basis points
-        uint256 ticketAPR; // in basis points
-        uint256 totalDeposited;
-        uint256 lastHarvestTime;
-        uint256 totalYieldGenerated;
-        uint256 totalBaseYield;
-        uint256 totalTicketYield;
+        bool isActive;                  // 1 byte
+        uint16 baseAPR;                 // 2 bytes - max 65535 bps (655.35%)
+        uint16 ticketAPR;               // 2 bytes - max 65535 bps (655.35%)
+        uint96 totalDeposited;          // 12 bytes - sufficient for most tokens
+        uint64 lastHarvestTime;         // 8 bytes - valid until year 584 billion
+        uint96 totalYieldGenerated;     // 12 bytes
+        uint96 totalBaseYield;          // 12 bytes
+        uint96 totalTicketYield;        // 12 bytes
     }
 
     // Token address => YieldConfig
@@ -95,9 +99,9 @@ contract YieldGenerator is AccessControl, ReentrancyGuard, Pausable {
         }
 
         config.isActive = true;
-        config.baseAPR = baseAPR;
-        config.ticketAPR = ticketAPR;
-        config.lastHarvestTime = block.timestamp;
+        config.baseAPR = uint16(baseAPR);
+        config.ticketAPR = uint16(ticketAPR);
+        config.lastHarvestTime = uint64(block.timestamp);
 
         emit YieldConfigured(token, baseAPR, ticketAPR);
     }
@@ -114,7 +118,7 @@ contract YieldGenerator is AccessControl, ReentrancyGuard, Pausable {
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
-        yieldConfigs[token].totalDeposited += amount;
+        yieldConfigs[token].totalDeposited += uint96(amount);
 
         emit Deposited(token, amount);
     }
@@ -130,7 +134,7 @@ contract YieldGenerator is AccessControl, ReentrancyGuard, Pausable {
         require(amount > 0, "YieldGenerator: Invalid amount");
         require(yieldConfigs[token].totalDeposited >= amount, "YieldGenerator: Insufficient balance");
 
-        yieldConfigs[token].totalDeposited -= amount;
+        yieldConfigs[token].totalDeposited -= uint96(amount);
 
         IERC20(token).safeTransfer(msg.sender, amount);
 
@@ -142,7 +146,7 @@ contract YieldGenerator is AccessControl, ReentrancyGuard, Pausable {
      * @param token The token address
      * @dev In production, this would interact with external DeFi protocols
      */
-    function harvest(address token) external nonReentrant whenNotPaused {
+    function harvest(address token) external onlyRole(OPERATOR_ROLE) nonReentrant whenNotPaused {
         YieldConfig storage config = yieldConfigs[token];
         require(config.isActive, "YieldGenerator: Token not configured");
         require(config.totalDeposited > 0, "YieldGenerator: No deposits");
@@ -157,31 +161,41 @@ contract YieldGenerator is AccessControl, ReentrancyGuard, Pausable {
         uint256 totalYield = baseYield + ticketYield;
 
         // Update config
-        config.lastHarvestTime = block.timestamp;
-        config.totalYieldGenerated += totalYield;
-        config.totalBaseYield += baseYield;
-        config.totalTicketYield += ticketYield;
+        config.lastHarvestTime = uint64(block.timestamp);
+        config.totalYieldGenerated += uint96(totalYield);
+        config.totalBaseYield += uint96(baseYield);
+        config.totalTicketYield += uint96(ticketYield);
 
         // Distribute base yield to RewardsManager
         if (baseYield > 0 && address(rewardsManager) != address(0)) {
-            // In production, transfer to rewardsManager and call fundRewardPool(token, baseYield)
-            // For now, we keep the yield in this contract
+            IERC20(token).safeTransfer(address(rewardsManager), baseYield);
+            rewardsManager.fundRewardPool(token, baseYield);
         }
 
         // Distribute ticket yield to PrizePoolManager
-        if (ticketYield > 0 && address(prizePoolManager) != address(0)) {
-            // In production, transfer to prizePoolManager and call fundPool(defaultPrizePoolId, ticketYield)
-            // For now, we keep the yield in this contract
+        if (ticketYield > 0 && address(prizePoolManager) != address(0) && defaultPrizePoolId > 0) {
+            IERC20(token).safeTransfer(address(prizePoolManager), ticketYield);
+            prizePoolManager.fundPool(defaultPrizePoolId, ticketYield);
         }
 
         emit YieldHarvested(token, totalYield, baseYield, ticketYield, block.timestamp);
     }
 
     /**
-     * @notice Harvest yield for all configured tokens
+     * @notice Harvest yield for all configured tokens (limited batch)
+     * @param startIndex The starting index in supportedTokens array
+     * @param batchSize Number of tokens to harvest (max MAX_HARVEST_BATCH)
      */
-    function harvestAll() external nonReentrant whenNotPaused {
-        for (uint256 i = 0; i < supportedTokens.length; i++) {
+    function harvestAll(uint256 startIndex, uint256 batchSize) external onlyRole(OPERATOR_ROLE) nonReentrant whenNotPaused {
+        require(batchSize > 0 && batchSize <= MAX_HARVEST_BATCH, "YieldGenerator: Invalid batch size");
+        require(startIndex < supportedTokens.length, "YieldGenerator: Invalid start index");
+
+        uint256 endIndex = startIndex + batchSize;
+        if (endIndex > supportedTokens.length) {
+            endIndex = supportedTokens.length;
+        }
+
+        for (uint256 i = startIndex; i < endIndex; i++) {
             address token = supportedTokens[i];
             YieldConfig storage config = yieldConfigs[token];
 
@@ -195,10 +209,10 @@ contract YieldGenerator is AccessControl, ReentrancyGuard, Pausable {
                         (365 days * 10000);
                     uint256 totalYield = baseYield + ticketYield;
 
-                    config.lastHarvestTime = block.timestamp;
-                    config.totalYieldGenerated += totalYield;
-                    config.totalBaseYield += baseYield;
-                    config.totalTicketYield += ticketYield;
+                    config.lastHarvestTime = uint64(block.timestamp);
+                    config.totalYieldGenerated += uint96(totalYield);
+                    config.totalBaseYield += uint96(baseYield);
+                    config.totalTicketYield += uint96(ticketYield);
 
                     emit YieldHarvested(token, totalYield, baseYield, ticketYield, block.timestamp);
                 }
