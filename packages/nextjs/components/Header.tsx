@@ -20,8 +20,8 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/about",
   },
   {
-    label: "Vaults",
-    href: "/vaults",
+    label: "Staking",
+    href: "/staking",
   },
   {
     label: "Prizes",

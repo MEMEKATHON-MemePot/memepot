@@ -1,8 +1,8 @@
 "use client";
 
-import VaultsTable from "./components/VaultsTable";
+import StakingTable from "./components/StakingTable";
 
-export default function Vaults() {
+export default function Staking() {
   return (
     <div className="min-h-screen bg-[#0a0118]">
       {/* Hero Section with Stats */}
@@ -21,22 +21,26 @@ export default function Vaults() {
                 <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg">
                   <i className="ri-water-flash-line text-purple-400 text-2xl"></i>
                 </div>
-                <h1 className="text-4xl font-bold text-white">Vaults</h1>
+                <h1 className="text-4xl font-bold text-white">Staking</h1>
               </div>
               <p className="text-lg text-gray-400 max-w-3xl leading-relaxed">
-                Deposit safely,{" "}
+                Select{" "}
                 <span className="text-transparent bg-gradient-to-r from-pink-400 to-pink-500 bg-clip-text font-semibold">
-                  win big
+                  the asset
+                </span>{" "}
+                you want to stake! <br />
+                We&apos;ll reward you with{" "}
+                <span className="text-transparent bg-gradient-to-r from-pink-400 to-pink-500 bg-clip-text font-semibold">
+                  carnival tieckets
+                </span>{" "}
+                and{" "}
+                <span className="text-transparent bg-gradient-to-r  from-pink-400 to-pink-500 bg-clip-text font-semibold">
+                  staking interest.
                 </span>
-                , stay secure.
-                <br />
-                <span className="text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text font-semibold">
-                  Trust the Pot
-                </span>
-                ; withdraw anytime, no loss guaranteed.
               </p>
             </div>
 
+            {/* TODO: 연동 */}
             {/* Stats Cards */}
             <div className="flex gap-3">
               <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl p-5 min-w-[160px]">
@@ -45,7 +49,7 @@ export default function Vaults() {
                   <div className="text-xl font-bold text-white">$172,774,670</div>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-pink-900/30 to-pink-800/20 backdrop-blur-sm border border-pink-500/20 rounded-xl p-5 min-w-[160px]">
+              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl p-5 min-w-[160px]">
                 <div className="text-left">
                   <div className="text-xs text-gray-400 mb-1.5">7D TVL</div>
                   <div className="text-xl font-bold text-white">$23,450,000</div>
@@ -53,7 +57,7 @@ export default function Vaults() {
               </div>
               <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl p-5 min-w-[160px]">
                 <div className="text-left">
-                  <div className="text-xs text-gray-400 mb-1.5">7D Guaranteed Yields</div>
+                  <div className="text-xs text-gray-400 mb-1.5">7D Yields</div>
                   <div className="text-xl font-bold text-white">$131,061</div>
                 </div>
               </div>
@@ -62,10 +66,10 @@ export default function Vaults() {
         </div>
       </div>
 
-      {/* Vaults Table Section */}
+      {/* Staking Table Section */}
       <div className="relative pb-24 px-6">
         <div className="max-w-7xl mx-auto">
-          <VaultsTable />
+          <StakingTable />
         </div>
       </div>
     </div>

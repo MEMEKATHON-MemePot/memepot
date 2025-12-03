@@ -6,19 +6,18 @@ interface Vault {
   name: string;
   token: string;
   icon: string;
-  maxPrize: string;
-  baseAPR: string;
-  ticketAPR: string;
+  apr: string;
+  contractAddress: string;
   totalDeposits: string;
   chain: string;
   volume24h: string;
 }
 
-export default function VaultsTable() {
+export default function StakingTable() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"tvl" | "apy" | "volume">("tvl");
+  const [sortBy, setSortBy] = useState<"tvl" | "apr" | "24h vol">("apr");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [displayCount, setDisplayCount] = useState(8);
+  const [displayCount, setDisplayCount] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
   const [depositAmount, setDepositAmount] = useState("");
@@ -63,10 +62,10 @@ export default function VaultsTable() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && !isLoading && displayCount < vaults.length) {
+        if (entries[0].isIntersecting && !isLoading && displayCount < MockStakingList.length) {
           setIsLoading(true);
           setTimeout(() => {
-            setDisplayCount(prev => Math.min(prev + 8, vaults.length));
+            setDisplayCount(prev => Math.min(prev + 8, MockStakingList.length));
             setIsLoading(false);
           }, 500);
         }
@@ -87,220 +86,62 @@ export default function VaultsTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, displayCount]);
 
-  const vaults: Vault[] = [
+  const MockStakingList: Vault[] = [
     {
       id: "1",
-      name: "Prize USDT",
+      name: "USDT",
       token: "USDT",
+      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
       icon: "💵",
-      maxPrize: "Up to $50,000",
-      baseAPR: "4.2",
-      ticketAPR: "2.8",
+      apr: "6",
       totalDeposits: "$3,200,000",
       chain: "Memecore",
-      volume24h: "$890,123",
+      volume24h: "$390,123",
     },
     {
       id: "2",
-      name: "Prize USDC",
+      name: "USDC",
       token: "USDC",
+      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
       icon: "💎",
-      maxPrize: "Up to $75,000",
-      baseAPR: "5.1",
-      ticketAPR: "3.2",
-      totalDeposits: "$1,890,000",
+      apr: "5.1",
+      totalDeposits: "$8,890,000",
       chain: "Memecore",
-      volume24h: "$4,567,890",
+      volume24h: "$267,890",
     },
     {
       id: "3",
-      name: "Prize WETH",
-      token: "WETH",
+      name: "MEMECORE",
+      token: "M",
+      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
       icon: "⚡",
-      maxPrize: "Up to $100,000",
-      baseAPR: "3.8",
-      ticketAPR: "2.5",
+      apr: "3.8",
       totalDeposits: "$5,120,000",
       chain: "Memecore",
-      volume24h: "$1,234,567",
-    },
-    {
-      id: "4",
-      name: "Prize DAI",
-      token: "DAI",
-      icon: "🌟",
-      maxPrize: "Up to $40,000",
-      baseAPR: "7.9",
-      ticketAPR: "4.5",
-      totalDeposits: "$780,000",
-      chain: "Memecore",
-      volume24h: "$3,456,789",
-    },
-    {
-      id: "5",
-      name: "Prize WBTC",
-      token: "WBTC",
-      icon: "🔶",
-      maxPrize: "Up to $120,000",
-      baseAPR: "6.5",
-      ticketAPR: "3.0",
-      totalDeposits: "$2,340,000",
-      chain: "Memecore",
-      volume24h: "$2,345,678",
-    },
-    {
-      id: "6",
-      name: "Prize MATIC",
-      token: "MATIC",
-      icon: "🟣",
-      maxPrize: "Up to $35,000",
-      baseAPR: "3.5",
-      ticketAPR: "2.2",
-      totalDeposits: "$6,450,000",
-      chain: "Memecore",
-      volume24h: "$678,901",
-    },
-    {
-      id: "7",
-      name: "Prize LINK",
-      token: "LINK",
-      icon: "🔗",
-      maxPrize: "Up to $60,000",
-      baseAPR: "5.8",
-      ticketAPR: "3.8",
-      totalDeposits: "$4,890,000",
-      chain: "Memecore",
-      volume24h: "$5,789,012",
-    },
-    {
-      id: "8",
-      name: "Prize UNI",
-      token: "UNI",
-      icon: "🦄",
-      maxPrize: "Up to $55,000",
-      baseAPR: "8.3",
-      ticketAPR: "5.5",
-      totalDeposits: "$1,340,000",
-      chain: "Memecore",
-      volume24h: "$1,456,789",
-    },
-    {
-      id: "9",
-      name: "Prize AAVE",
-      token: "AAVE",
-      icon: "👻",
-      maxPrize: "Up to $65,000",
-      baseAPR: "4.7",
-      ticketAPR: "3.1",
-      totalDeposits: "$2,890,000",
-      chain: "Memecore",
-      volume24h: "$1,890,234",
-    },
-    {
-      id: "10",
-      name: "Prize SUSHI",
-      token: "SUSHI",
-      icon: "🍣",
-      maxPrize: "Up to $45,000",
-      baseAPR: "6.2",
-      ticketAPR: "4.0",
-      totalDeposits: "$1,560,000",
-      chain: "Memecore",
-      volume24h: "$2,123,456",
-    },
-    {
-      id: "11",
-      name: "Prize CRV",
-      token: "CRV",
-      icon: "🌀",
-      maxPrize: "Up to $50,000",
-      baseAPR: "5.5",
-      ticketAPR: "3.5",
-      totalDeposits: "$2,120,000",
-      chain: "Memecore",
-      volume24h: "$1,567,890",
-    },
-    {
-      id: "12",
-      name: "Prize SNX",
-      token: "SNX",
-      icon: "⚙️",
-      maxPrize: "Up to $55,000",
-      baseAPR: "7.1",
-      ticketAPR: "4.8",
-      totalDeposits: "$1,780,000",
-      chain: "Memecore",
-      volume24h: "$2,890,123",
-    },
-    {
-      id: "13",
-      name: "Prize COMP",
-      token: "COMP",
-      icon: "🏦",
-      maxPrize: "Up to $70,000",
-      baseAPR: "4.9",
-      ticketAPR: "3.3",
-      totalDeposits: "$3,450,000",
-      chain: "Memecore",
-      volume24h: "$3,234,567",
-    },
-    {
-      id: "14",
-      name: "Prize MKR",
-      token: "MKR",
-      icon: "🎯",
-      maxPrize: "Up to $80,000",
-      baseAPR: "5.3",
-      ticketAPR: "3.6",
-      totalDeposits: "$4,120,000",
-      chain: "Memecore",
-      volume24h: "$4,123,456",
-    },
-    {
-      id: "15",
-      name: "Prize YFI",
-      token: "YFI",
-      icon: "💙",
-      maxPrize: "Up to $90,000",
-      baseAPR: "6.8",
-      ticketAPR: "4.2",
-      totalDeposits: "$3,890,000",
-      chain: "Memecore",
-      volume24h: "$3,678,901",
-    },
-    {
-      id: "16",
-      name: "Prize BAL",
-      token: "BAL",
-      icon: "⚖️",
-      maxPrize: "Up to $48,000",
-      baseAPR: "5.9",
-      ticketAPR: "3.9",
-      totalDeposits: "$2,340,000",
-      chain: "Memecore",
-      volume24h: "$2,456,789",
+      volume24h: "$234,567",
     },
   ];
 
-  const filteredVaults = vaults.filter(
+  const filteredStaking = MockStakingList.filter(
     vault =>
       vault.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vault.token.toLowerCase().includes(searchTerm.toLowerCase()),
+      vault.token.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vault.contractAddress.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const sortedVaults = [...filteredVaults].sort((a, b) => {
+  const sortedStaking = [...filteredStaking].sort((a, b) => {
     if (sortBy === "tvl") {
       return parseFloat(b.totalDeposits.replace(/[$,]/g, "")) - parseFloat(a.totalDeposits.replace(/[$,]/g, ""));
-    } else if (sortBy === "apy") {
-      return parseFloat(b.baseAPR) - parseFloat(a.baseAPR);
+    } else if (sortBy === "apr") {
+      return parseFloat(b.apr) - parseFloat(a.apr);
     } else {
       return parseFloat(b.volume24h.replace(/[$,]/g, "")) - parseFloat(a.volume24h.replace(/[$,]/g, ""));
     }
   });
 
-  const displayedVaults = sortedVaults.slice(0, displayCount);
+  const displayedStaking = sortedStaking.slice(0, displayCount);
 
-  const handleFilterSelect = (filter: "tvl" | "apy" | "volume") => {
+  const handleFilterSelect = (filter: "tvl" | "apr" | "24h vol") => {
     setSortBy(filter);
     setIsDropdownOpen(false);
   };
@@ -309,9 +150,9 @@ export default function VaultsTable() {
     switch (sortBy) {
       case "tvl":
         return "TVL";
-      case "apy":
-        return "APY";
-      case "volume":
+      case "apr":
+        return "APR";
+      case "24h vol":
         return "24h Vol";
       default:
         return "TVL";
@@ -329,9 +170,11 @@ export default function VaultsTable() {
   };
 
   const handleMaxClick = () => {
-    setDepositAmount("1000"); // Example max balance
+    //TODO: Fetch user balance and set accordingly
+    setDepositAmount("1000");
   };
 
+  //TODO: Integrate real transaction logic
   const handleDepositSubmit = () => {
     // Start transaction process
     setTransactionSteps([
@@ -361,15 +204,9 @@ export default function VaultsTable() {
     }, 2000);
   };
 
-  const calculateEstimatedTickets = (amount: string) => {
-    if (!amount || parseFloat(amount) <= 0 || !selectedVault) return 0;
-    // Estimate: 1 ticket per $10 deposited (example calculation)
-    return Math.floor(parseFloat(amount) / 10);
-  };
-
   const calculateAnnualReturn = (amount: string) => {
     if (!amount || parseFloat(amount) <= 0 || !selectedVault) return "0.00";
-    const annual = (parseFloat(amount) * parseFloat(selectedVault.baseAPR)) / 100;
+    const annual = (parseFloat(amount) * parseFloat(selectedVault.apr)) / 100;
     return annual.toFixed(2);
   };
 
@@ -382,23 +219,11 @@ export default function VaultsTable() {
             <div className="w-10 h-10 flex items-center justify-center bg-[#AD47FF]/20 rounded-lg">
               <i className="ri-money-dollar-circle-line text-[#AD47FF] text-xl"></i>
             </div>
-            <h3 className="text-white font-semibold text-sm">Fixed Yield</h3>
+            <h3 className="text-white font-semibold text-2xl">Trust</h3>
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">
-            Earn guaranteed returns on your deposits. Base yield is paid out regularly regardless of prize outcomes.
-          </p>
-        </div>
-
-        <div className="bg-gradient-to-br from-[#AD47FF]/10 to-pink-500/10 border border-[#AD47FF]/20 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 flex items-center justify-center bg-pink-500/20 rounded-lg">
-              <i className="ri-ticket-2-line text-pink-400 text-xl"></i>
-            </div>
-            <h3 className="text-white font-semibold text-sm">Event Tickets</h3>
-          </div>
-          <p className="text-gray-300 text-sm leading-relaxed">
-            Additional yield is converted into event tickets, giving you chances to win prizes while maintaining your
-            principal.
+            DeFi projects must operate based on trust. That&apos;s why we&apos;re building long-term rewards and trust
+            with well-established, transparent strategies rather than engagement-centric ones.
           </p>
         </div>
 
@@ -407,11 +232,25 @@ export default function VaultsTable() {
             <div className="w-10 h-10 flex items-center justify-center bg-green-500/20 rounded-lg">
               <i className="ri-shield-check-line text-green-400 text-xl"></i>
             </div>
-            <h3 className="text-white font-semibold text-sm">No Loss</h3>
+
+            <h3 className="text-white font-semibold text-2xl">Safety</h3>
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">
-            Your principal is always safe. Withdraw anytime with no penalties. Only the yield is used for prizes and
-            tickets.
+            We believe technology cannot fix DeFi projects. It requires the security trusted such as Liquidity.
+            That&apos;s why we consider security as our foremost goal.
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-[#AD47FF]/10 to-pink-500/10 border border-[#AD47FF]/20 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 flex items-center justify-center bg-pink-500/20 rounded-lg">
+              <i className="ri-ticket-2-line text-pink-400 text-xl"></i>
+            </div>
+            <h3 className="text-white font-semibold text-2xl">Fun</h3>
+          </div>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            With every project launch, 20% takes a year, we build it to provide the fun and excitement of continuous
+            events.
           </p>
         </div>
       </div>
@@ -441,6 +280,14 @@ export default function VaultsTable() {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-40 bg-[#1a0f2e] border border-[#AD47FF]/30 rounded-lg shadow-lg overflow-hidden z-10">
               <button
+                onClick={() => handleFilterSelect("apr")}
+                className={`w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#AD47FF]/20 transition-colors cursor-pointer ${
+                  sortBy === "apr" ? "bg-[#AD47FF]/20" : ""
+                }`}
+              >
+                APR
+              </button>
+              <button
                 onClick={() => handleFilterSelect("tvl")}
                 className={`w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#AD47FF]/20 transition-colors cursor-pointer ${
                   sortBy === "tvl" ? "bg-[#AD47FF]/20" : ""
@@ -448,18 +295,11 @@ export default function VaultsTable() {
               >
                 TVL
               </button>
+
               <button
-                onClick={() => handleFilterSelect("apy")}
+                onClick={() => handleFilterSelect("24h vol")}
                 className={`w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#AD47FF]/20 transition-colors cursor-pointer ${
-                  sortBy === "apy" ? "bg-[#AD47FF]/20" : ""
-                }`}
-              >
-                APY
-              </button>
-              <button
-                onClick={() => handleFilterSelect("volume")}
-                className={`w-full px-4 py-2.5 text-left text-sm text-white hover:bg-[#AD47FF]/20 transition-colors cursor-pointer ${
-                  sortBy === "volume" ? "bg-[#AD47FF]/20" : ""
+                  sortBy === "24h vol" ? "bg-[#AD47FF]/20" : ""
                 }`}
               >
                 24h Vol
@@ -504,6 +344,7 @@ export default function VaultsTable() {
                   <span className="text-sm text-gray-400 font-medium">Deposit Amount</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-400">
+                      {/* TODO: balance 실제 적용 */}
                       Balance: <span className="text-white font-semibold">1,000</span>
                     </span>
                     <button
@@ -514,21 +355,24 @@ export default function VaultsTable() {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between mb-3 gap-3">
                   <input
                     type="number"
                     value={depositAmount}
                     onChange={e => setDepositAmount(e.target.value)}
                     placeholder="0.00"
-                    className="flex-1 bg-transparent text-white text-3xl font-bold outline-none placeholder-gray-600"
+                    className="w-[60%] bg-transparent text-white text-3xl font-bold outline-none placeholder-gray-600"
                   />
                   <div className="flex items-center gap-2 px-3 py-2 bg-[#AD47FF]/10 rounded-lg border border-[#AD47FF]/20 shrink-0">
                     <span className="text-xl">{selectedVault.icon}</span>
                     <span className="text-white font-semibold text-sm">{selectedVault.token}</span>
                   </div>
                 </div>
+                {parseInt(depositAmount) > 1000 && (
+                  <span className="text-sm text-red-500 font-medium">Exceeds available balance</span>
+                )}
                 <div className="mt-2 text-sm text-gray-500">
-                  ≈ ${depositAmount ? (parseFloat(depositAmount) * 1).toFixed(2) : "0.00"} USD
+                  ≈ ${depositAmount ? parseFloat(depositAmount) * 1 : "0.00"}
                 </div>
               </div>
 
@@ -544,23 +388,23 @@ export default function VaultsTable() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                      <span className="text-sm text-gray-300">Fixed APY Return</span>
+                      <span className="text-sm text-gray-300">Fixed APR Return</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-green-400 font-bold text-sm">{selectedVault.baseAPR}%</div>
+                      {/* TODO: Fixed APY 어떻게 할지 */}
+                      <div className="text-green-400 font-bold text-sm">{selectedVault.apr}%</div>
                       <div className="text-xs text-gray-500">~${calculateAnnualReturn(depositAmount)}/year</div>
                     </div>
                   </div>
 
-                  {/* Prize Contribution */}
+                  {/* Point Contribution */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
-                      <span className="text-sm text-gray-300">Prize Contribution</span>
+                      <span className="text-sm text-gray-300">Point Contribution</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-pink-400 font-bold text-sm">{selectedVault.ticketAPR}%</div>
-                      <div className="text-xs text-gray-500">Converted to tickets</div>
+                      <div className="text-pink-400 font-bold text-sm">{depositAmount} P</div>
                     </div>
                   </div>
 
@@ -569,91 +413,25 @@ export default function VaultsTable() {
 
                   {/* Total APY */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-white font-semibold">Total APY</span>
-                    <div className="text-[#AD47FF] font-bold text-base">
-                      {(parseFloat(selectedVault.baseAPR) + parseFloat(selectedVault.ticketAPR)).toFixed(1)}%
-                    </div>
+                    <span className="text-sm text-white font-semibold">Daily Total Earn Points</span>
+                    <div className="text-[#AD47FF] font-bold text-base">{selectedVault.apr}%</div>
                   </div>
-
-                  {/* Estimated Tickets */}
-                  <div className="bg-gradient-to-r from-pink-500/10 to-[#AD47FF]/10 border border-pink-500/20 rounded-lg p-3 mt-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 flex items-center justify-center bg-pink-500/20 rounded-lg animate-pulse">
-                          <i className="ri-ticket-2-line text-pink-400 text-lg"></i>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-400">Estimated Weekly Tickets</div>
-                          <div className="text-white font-bold text-lg">{calculateEstimatedTickets(depositAmount)}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-gray-400">Win Chance</div>
-                        <div className="text-pink-400 font-semibold text-sm">
-                          {depositAmount && parseFloat(depositAmount) > 0 ? "~0.5%" : "0%"}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Safety Guarantee */}
-            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 mb-4">
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 bg-green-500/20 rounded-full">
-                  <i className="ri-shield-check-line text-green-400 text-base"></i>
-                </div>
-                <div>
-                  <h4 className="text-white font-bold text-sm mb-1">Withdraw Anytime, No Principal Loss Guaranteed</h4>
-                  <p className="text-gray-300 text-xs leading-relaxed">
-                    Your deposit is always safe and accessible. Only the yield is used for prizes and tickets. You can
-                    withdraw your full principal at any time with no penalties.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Risk Warning */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <i className="ri-error-warning-line text-orange-400 text-lg"></i>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold text-sm mb-1">Learn about the risks</h4>
-                  <p className="text-gray-300 text-xs leading-relaxed">
-                    PoolTogether is a permissionless protocol. Prize vaults can be deployed by anyone. Make sure you
-                    know what you are depositing into.{" "}
-                    <span className="text-[#AD47FF] cursor-pointer hover:underline">
-                      Learn more about this prize vault.
-                    </span>
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
+            {/* TODO: balance max */}
             <div className="space-y-3">
               <button
                 onClick={handleDepositSubmit}
-                disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                disabled={!depositAmount || parseFloat(depositAmount) <= 0 || parseInt(depositAmount) > 1000}
                 className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-[#AD47FF] rounded-xl text-white font-bold text-base hover:shadow-[0_0_30px_rgba(173,71,255,0.6)] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
               >
-                {depositAmount && parseFloat(depositAmount) > 0
+                {parseInt(depositAmount) <= 1000 && depositAmount && parseFloat(depositAmount) > 0
                   ? `Deposit ${depositAmount} ${selectedVault.token}`
                   : "Enter an amount"}
               </button>
-
-              {depositAmount && parseFloat(depositAmount) > 0 && (
-                <button
-                  onClick={handleDepositSubmit}
-                  className="w-full py-3 bg-[#AD47FF]/10 border border-[#AD47FF]/30 rounded-xl text-[#AD47FF] font-semibold text-sm hover:bg-[#AD47FF]/20 transition-all cursor-pointer whitespace-nowrap"
-                >
-                  Approve {selectedVault.token}
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -672,19 +450,18 @@ export default function VaultsTable() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-800/50">
-                <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">Vault</th>
-                <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">Base Yield</th>
-                <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">Ticket Yield</th>
-                <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">Total APR</th>
+                <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">Pool</th>
+                <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">APR</th>
                 <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">
                   Total Deposits
                 </th>
+                <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">24h Volume</th>
                 <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">Chain</th>
                 <th className="px-6 py-4 text-center text-sm font-normal text-white whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody>
-              {displayedVaults.map((vault, index) => (
+              {displayedStaking.map((vault, index) => (
                 <tr key={index} className="border-b border-gray-800/30 hover:bg-white/5 transition-colors">
                   {/* Pool */}
                   <td className="px-6 py-4">
@@ -696,30 +473,19 @@ export default function VaultsTable() {
                     </div>
                   </td>
 
-                  {/* Base Yield */}
+                  {/* APR */}
                   <td className="px-6 py-4 text-center">
-                    <div className="font-semibold text-green-400 text-sm">
-                      {vault.baseAPR}% <span className="text-xs text-gray-400">(Fixed)</span>
-                    </div>
-                  </td>
-
-                  {/* Ticket Yield */}
-                  <td className="px-6 py-4 text-center">
-                    <div className="font-semibold text-green-400 text-sm">
-                      {vault.ticketAPR}% <span className="text-xs text-gray-400">(Tickets)</span>
-                    </div>
-                  </td>
-
-                  {/* Total APR */}
-                  <td className="px-6 py-4 text-center">
-                    <div className="font-bold text-pink-400 text-base">
-                      {(parseFloat(vault.baseAPR) + parseFloat(vault.ticketAPR)).toFixed(1)}%
-                    </div>
+                    <div className="font-semibold text-green-400 text-sm">{vault.apr}%</div>
                   </td>
 
                   {/* Total Deposits */}
                   <td className="px-6 py-4 text-center">
                     <div className="font-semibold text-white text-sm">{vault.totalDeposits}</div>
+                  </td>
+
+                  {/* 24h Volume */}
+                  <td className="px-6 py-4 text-center">
+                    <div className="font-semibold text-white text-sm">{vault.volume24h}</div>
                   </td>
 
                   {/* Chain */}
@@ -746,21 +512,21 @@ export default function VaultsTable() {
       </div>
 
       {/* Infinite Scroll Trigger & Loading */}
-      {displayCount < sortedVaults.length && (
+      {displayCount < sortedStaking.length && (
         <div ref={observerRef} className="flex justify-center py-8">
           {isLoading && (
             <div className="flex items-center gap-2 text-gray-400">
               <div className="w-5 h-5 border-2 border-[#AD47FF] border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">Loading more vaults...</span>
+              <span className="text-sm">Loading more Staking...</span>
             </div>
           )}
         </div>
       )}
 
       {/* End Message */}
-      {displayCount >= sortedVaults.length && sortedVaults.length > 8 && (
+      {displayCount >= sortedStaking.length && sortedStaking.length > 8 && (
         <div className="flex justify-center py-6">
-          <span className="text-sm text-gray-500">All vaults loaded</span>
+          <span className="text-sm text-gray-500">All Staking loaded</span>
         </div>
       )}
     </div>
