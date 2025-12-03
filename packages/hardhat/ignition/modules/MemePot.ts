@@ -108,45 +108,72 @@ const MemePotModule = buildModule("MemePotModule", m => {
   m.call(priceOracle, "updatePrice", [sushi, 8500000]); // $0.85
   m.call(priceOracle, "updatePrice", [uni, 620000000]); // $6.20
 
-  // Create prize pools
-  // Daily USDC pool - 24 USDC
-  const dailyPool = m.call(prizePoolManager, "createPool", [
-    "Daily Quick Draw",
-    usdc,
-    m.getParameter("dailyPrize", "24000000"), // 24 USDC (6 decimals)
+  // Create prize pools - 9 pools total (USDT, Memecore, MEMEX each with Daily/Weekly/Monthly)
+
+  // USDT Pools
+  m.call(prizePoolManager, "createPool", [
+    "USDT Daily Draw",
+    usdt,
+    m.getParameter("usdtDailyPrize", "100000000"), // 100 USDT (6 decimals)
     0, // DrawFrequency.Daily
   ]);
 
-  // Weekly USDT pool - 343 USDT
-  const weeklyPool = m.call(prizePoolManager, "createPool", [
-    "Weekly USDT Pool",
+  m.call(prizePoolManager, "createPool", [
+    "USDT Weekly Pool",
     usdt,
-    m.getParameter("weeklyPrize", "343000000"), // 343 USDT (6 decimals)
+    m.getParameter("usdtWeeklyPrize", "1000000000"), // 1,000 USDT (6 decimals)
     1, // DrawFrequency.Weekly
   ]);
 
-  // Monthly pool - 1,569 USDT
-  const monthlyPool = m.call(prizePoolManager, "createPool", [
-    "Monthly Meme Jackpot",
+  m.call(prizePoolManager, "createPool", [
+    "USDT Monthly Jackpot",
     usdt,
-    m.getParameter("monthlyPrize", "1569000000"), // 1,569 USDT (6 decimals)
+    m.getParameter("usdtMonthlyPrize", "5000000000"), // 5,000 USDT (6 decimals)
     3, // DrawFrequency.Monthly
   ]);
 
-  // Quarterly pool - 8,750 WETH (assuming MEME token uses 18 decimals)
-  const quarterlyPool = m.call(prizePoolManager, "createPool", [
-    "Mega Memecore Lottery",
-    weth,
-    m.getParameter("quarterlyPrize", "8750000000000000000000"), // 8,750 WETH (18 decimals)
-    4, // DrawFrequency.Quarterly
+  // Memecore (Native MEME) Pools
+  m.call(prizePoolManager, "createPool", [
+    "Memecore Daily Draw",
+    NATIVE_TOKEN,
+    m.getParameter("memeDailyPrize", "10000000000000000000"), // 10 MEME (18 decimals)
+    0, // DrawFrequency.Daily
   ]);
 
-  // Semi-annual pool - 11,585 WETH (representing ETH)
-  const semiAnnualPool = m.call(prizePoolManager, "createPool", [
-    "Ethereum Grand Prize",
+  m.call(prizePoolManager, "createPool", [
+    "Memecore Weekly Pool",
+    NATIVE_TOKEN,
+    m.getParameter("memeWeeklyPrize", "100000000000000000000"), // 100 MEME (18 decimals)
+    1, // DrawFrequency.Weekly
+  ]);
+
+  m.call(prizePoolManager, "createPool", [
+    "Memecore Monthly Jackpot",
+    NATIVE_TOKEN,
+    m.getParameter("memeMonthlyPrize", "500000000000000000000"), // 500 MEME (18 decimals)
+    3, // DrawFrequency.Monthly
+  ]);
+
+  // MEMEX (WETH as placeholder) Pools
+  m.call(prizePoolManager, "createPool", [
+    "MEMEX Daily Draw",
     weth,
-    m.getParameter("semiAnnualPrize", "11585000000000000000000"), // 11,585 WETH (18 decimals)
-    5, // DrawFrequency.SemiAnnual
+    m.getParameter("memexDailyPrize", "1000000000000000000"), // 1 MEMEX (18 decimals)
+    0, // DrawFrequency.Daily
+  ]);
+
+  m.call(prizePoolManager, "createPool", [
+    "MEMEX Weekly Pool",
+    weth,
+    m.getParameter("memexWeeklyPrize", "10000000000000000000"), // 10 MEMEX (18 decimals)
+    1, // DrawFrequency.Weekly
+  ]);
+
+  m.call(prizePoolManager, "createPool", [
+    "MEMEX Monthly Jackpot",
+    weth,
+    m.getParameter("memexMonthlyPrize", "50000000000000000000"), // 50 MEMEX (18 decimals)
+    3, // DrawFrequency.Monthly
   ]);
 
   return {
@@ -174,12 +201,6 @@ const MemePotModule = buildModule("MemePotModule", m => {
     yieldGenerator,
     prizePoolManager,
     ticketNFT,
-    // Prize pools
-    dailyPool,
-    weeklyPool,
-    monthlyPool,
-    quarterlyPool,
-    semiAnnualPool,
   };
 });
 
