@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { parseUnits } from "viem";
+import { useAccount, useBalance } from "wagmi";
 import TransactionProgressModal from "~~/components/TransactionProgressModal";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 interface Vault {
   id: string;
@@ -7,11 +10,21 @@ interface Vault {
   token: string;
   icon: string;
   apr: string;
-  contractAddress: string;
+  tokenContract: string;
   totalDeposits: string;
   chain: string;
   volume24h: string;
+  decimals: number;
+  isNative?: boolean;
 }
+
+// Token addresses and config (deployed on Insectarium network - chainId: 43522)
+const TOKENS: { [key: string]: { address: `0x${string}`; decimals: number } } = {
+  USDT: { address: "0x2F665Cec0DaC0E41112f4eB575077df443B522B1", decimals: 6 },
+  USDC: { address: "0x7C81888a24b92C7083507dD0747bcC190102418A", decimals: 6 },
+};
+
+const VAULT_MANAGER_ADDRESS = "0x6E66cA2eb5862637a6Bab4bD7eC1fc9e0e919f2C" as `0x${string}`;
 
 export default function StakingTable() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,6 +41,62 @@ export default function StakingTable() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Blockchain write hooks
+  const { writeContractAsync: writeVault } = useScaffoldWriteContract({ contractName: "VaultManager" });
+  const { writeContractAsync: writeUSDT } = useScaffoldWriteContract({ contractName: "USDT" });
+  const { writeContractAsync: writeUSDC } = useScaffoldWriteContract({ contractName: "USDC" });
+
+  // balance test
+  const account = useAccount();
+  const { data } = useBalance({
+    address: account.address,
+    chainId: account.chain?.id,
+  });
+
+  const nativeBalance = data?.formatted;
+
+  const MockStakingList: Vault[] = [
+    {
+      id: "1",
+      name: "USDT",
+      token: "USDT",
+      tokenContract: "0x2F665Cec0DaC0E41112f4eB575077df443B522B1",
+      icon: "💵",
+      apr: "6",
+      totalDeposits: "$3,200,000",
+      chain: "Memecore",
+      volume24h: "$390,123",
+      decimals: 6,
+      isNative: false,
+    },
+    {
+      id: "2",
+      name: "USDC",
+      token: "USDC",
+      tokenContract: "0x7C81888a24b92C7083507dD0747bcC190102418A",
+      icon: "💎",
+      apr: "5.1",
+      totalDeposits: "$8,890,000",
+      chain: "Memecore",
+      volume24h: "$267,890",
+      decimals: 6,
+      isNative: false,
+    },
+    {
+      id: "3",
+      name: "MEMECORE",
+      token: "M",
+      tokenContract: "0x1234567890abcdef1234567890abcdef12345678",
+      icon: "⚡",
+      apr: "3.8",
+      totalDeposits: "$5,120,000",
+      chain: "Memecore",
+      volume24h: "$234,567",
+      decimals: 18,
+      isNative: true,
+    },
+  ];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -86,47 +155,11 @@ export default function StakingTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, displayCount]);
 
-  const MockStakingList: Vault[] = [
-    {
-      id: "1",
-      name: "USDT",
-      token: "USDT",
-      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
-      icon: "💵",
-      apr: "6",
-      totalDeposits: "$3,200,000",
-      chain: "Memecore",
-      volume24h: "$390,123",
-    },
-    {
-      id: "2",
-      name: "USDC",
-      token: "USDC",
-      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
-      icon: "💎",
-      apr: "5.1",
-      totalDeposits: "$8,890,000",
-      chain: "Memecore",
-      volume24h: "$267,890",
-    },
-    {
-      id: "3",
-      name: "MEMECORE",
-      token: "M",
-      contractAddress: "0x1234567890abcdef1234567890abcdef12345678",
-      icon: "⚡",
-      apr: "3.8",
-      totalDeposits: "$5,120,000",
-      chain: "Memecore",
-      volume24h: "$234,567",
-    },
-  ];
-
   const filteredStaking = MockStakingList.filter(
     vault =>
       vault.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vault.token.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vault.contractAddress.toLowerCase().includes(searchTerm.toLowerCase()),
+      vault.tokenContract.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const sortedStaking = [...filteredStaking].sort((a, b) => {
@@ -169,39 +202,80 @@ export default function StakingTable() {
     setDepositAmount("");
   };
 
-  const handleMaxClick = () => {
-    //TODO: Fetch user balance and set accordingly
-    setDepositAmount("1000");
+  const handleMaxClick = (balance: string) => {
+    setDepositAmount(balance);
   };
 
-  //TODO: Integrate real transaction logic
-  const handleDepositSubmit = () => {
-    // Start transaction process
-    setTransactionSteps([
-      { id: "1", label: "Approve Token", status: "processing" },
-      { id: "2", label: "Send Transaction", status: "pending" },
-    ]);
-    setShowTransactionModal(true);
-    handleCloseModal();
+  const handleDepositSubmit = async () => {
+    if (!selectedVault || !depositAmount) {
+      console.error("Missing required data");
+      return;
+    }
 
-    // Simulate transaction steps
-    setTimeout(() => {
-      setTransactionSteps([
-        { id: "1", label: "Approve Token", status: "completed" },
-        { id: "2", label: "Send Transaction", status: "processing" },
-      ]);
+    try {
+      const amount = parseUnits(depositAmount, selectedVault.decimals);
 
-      setTimeout(() => {
+      if (selectedVault.isNative) {
+        // Native token deposit (MEME) - no approval needed
+        setTransactionSteps([{ id: "1", label: "Deposit Native Token", status: "processing" }]);
+        setShowTransactionModal(true);
+        handleCloseModal();
+
+        // Call depositNative with value
+        await writeVault({
+          functionName: "depositNative",
+          value: amount,
+        });
+
+        setTransactionSteps([{ id: "1", label: "Deposit Native Token", status: "completed" }]);
+
+        setTimeout(() => {
+          setShowTransactionModal(false);
+        }, 1500);
+      } else {
+        // ERC20 token deposit (USDT, USDC)
+        setTransactionSteps([
+          { id: "1", label: "Approve Token", status: "processing" },
+          { id: "2", label: "Deposit to Vault", status: "pending" },
+        ]);
+        setShowTransactionModal(true);
+        handleCloseModal();
+
+        const tokenInfo = TOKENS[selectedVault.token];
+        const writeToken = selectedVault.tokenContract === "USDT" ? writeUSDT : writeUSDC;
+
+        // Step 1: Approve token
+        await writeToken({
+          functionName: "approve",
+          args: [VAULT_MANAGER_ADDRESS, amount],
+        });
+
         setTransactionSteps([
           { id: "1", label: "Approve Token", status: "completed" },
-          { id: "2", label: "Send Transaction", status: "completed" },
+          { id: "2", label: "Deposit to Vault", status: "processing" },
+        ]);
+
+        // Step 2: Deposit to vault
+        await writeVault({
+          functionName: "deposit",
+          args: [tokenInfo.address, amount],
+        });
+
+        setTransactionSteps([
+          { id: "1", label: "Approve Token", status: "completed" },
+          { id: "2", label: "Deposit to Vault", status: "completed" },
         ]);
 
         setTimeout(() => {
           setShowTransactionModal(false);
         }, 1500);
-      }, 2000);
-    }, 2000);
+      }
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      setTransactionSteps(prev =>
+        prev.map(step => (step.status === "processing" ? { ...step, status: "failed" as const } : step)),
+      );
+    }
   };
 
   const calculateAnnualReturn = (amount: string) => {
@@ -344,11 +418,11 @@ export default function StakingTable() {
                   <span className="text-sm text-gray-400 font-medium">Deposit Amount</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-400">
-                      {/* TODO: balance 실제 적용 */}
-                      Balance: <span className="text-white font-semibold">1,000</span>
+                      Balance:{" "}
+                      <span className="text-white font-semibold">{selectedVault.isNative ? nativeBalance : "1"}</span>
                     </span>
                     <button
-                      onClick={handleMaxClick}
+                      onClick={() => handleMaxClick(selectedVault.isNative && nativeBalance ? nativeBalance : "1")}
                       className="px-2 py-1 text-xs text-[#AD47FF] hover:text-pink-400 transition-colors cursor-pointer font-bold bg-[#AD47FF]/10 rounded border border-[#AD47FF]/30 hover:bg-[#AD47FF]/20"
                     >
                       MAX
@@ -368,7 +442,8 @@ export default function StakingTable() {
                     <span className="text-white font-semibold text-sm">{selectedVault.token}</span>
                   </div>
                 </div>
-                {parseInt(depositAmount) > 1000 && (
+                {parseFloat(depositAmount) >
+                  (selectedVault.isNative && nativeBalance ? parseFloat(nativeBalance) : 1) && (
                   <span className="text-sm text-red-500 font-medium">Exceeds available balance</span>
                 )}
                 <div className="mt-2 text-sm text-gray-500">
@@ -425,10 +500,17 @@ export default function StakingTable() {
             <div className="space-y-3">
               <button
                 onClick={handleDepositSubmit}
-                disabled={!depositAmount || parseFloat(depositAmount) <= 0 || parseInt(depositAmount) > 1000}
+                disabled={
+                  !depositAmount ||
+                  parseFloat(depositAmount) <= 0 ||
+                  parseFloat(depositAmount) > (selectedVault.isNative && nativeBalance ? parseFloat(nativeBalance) : 1)
+                }
                 className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-[#AD47FF] rounded-xl text-white font-bold text-base hover:shadow-[0_0_30px_rgba(173,71,255,0.6)] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
               >
-                {parseInt(depositAmount) <= 1000 && depositAmount && parseFloat(depositAmount) > 0
+                {parseFloat(depositAmount) <=
+                  (selectedVault.isNative && nativeBalance ? parseFloat(nativeBalance) : 1) &&
+                depositAmount &&
+                parseFloat(depositAmount) > 0
                   ? `Deposit ${depositAmount} ${selectedVault.token}`
                   : "Enter an amount"}
               </button>

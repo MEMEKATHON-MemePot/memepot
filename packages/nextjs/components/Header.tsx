@@ -70,7 +70,6 @@ export const Header = () => {
           {/* Wallet Button & Faucet */}
           <div className="hidden md:flex items-center">
             <RainbowKitCustomConnectButton />
-            {/* {isLocalNetwork && <FaucetButton />} */}
           </div>
 
           {/* Mobile Menu Button */}
