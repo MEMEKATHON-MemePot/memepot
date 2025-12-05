@@ -13,20 +13,6 @@ const deployMemePot: DeployFunction = async function (hre: HardhatRuntimeEnviron
   const tokens = [
     { name: "Tether USD", symbol: "USDT", decimals: 6 },
     { name: "USD Coin", symbol: "USDC", decimals: 6 },
-    { name: "Wrapped Ether", symbol: "WETH", decimals: 18 },
-    { name: "Dai Stablecoin", symbol: "DAI", decimals: 18 },
-    { name: "Wrapped Matic", symbol: "MATIC", decimals: 18 },
-    { name: "ChainLink Token", symbol: "LINK", decimals: 18 },
-    { name: "Maker", symbol: "MKR", decimals: 18 },
-    { name: "yearn.finance", symbol: "YFI", decimals: 18 },
-    { name: "Compound", symbol: "COMP", decimals: 18 },
-    { name: "Aave Token", symbol: "AAVE", decimals: 18 },
-    { name: "Wrapped Bitcoin", symbol: "WBTC", decimals: 8 },
-    { name: "Balancer", symbol: "BAL", decimals: 18 },
-    { name: "Curve DAO Token", symbol: "CRV", decimals: 18 },
-    { name: "Synthetix Network Token", symbol: "SNX", decimals: 18 },
-    { name: "SushiToken", symbol: "SUSHI", decimals: 18 },
-    { name: "Uniswap", symbol: "UNI", decimals: 18 },
   ];
 
   const deployedTokens: { [key: string]: any } = {};
@@ -136,42 +122,51 @@ const deployMemePot: DeployFunction = async function (hre: HardhatRuntimeEnviron
   // Create vaults with different APRs
   console.log("\n🏦 Creating Vaults...");
 
+  // Native token address constant
+  const NATIVE_TOKEN = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
   const vaultConfigs = [
-    { symbol: "USDT", baseAPR: 420, ticketAPR: 280, maxDeposit: "1000000", decimals: 6 },
-    { symbol: "USDC", baseAPR: 510, ticketAPR: 320, maxDeposit: "1000000", decimals: 6 },
-    { symbol: "WETH", baseAPR: 380, ticketAPR: 250, maxDeposit: "1000", decimals: 18 },
-    { symbol: "DAI", baseAPR: 790, ticketAPR: 450, maxDeposit: "1000000", decimals: 18 },
-    { symbol: "MATIC", baseAPR: 650, ticketAPR: 380, maxDeposit: "5000000", decimals: 18 },
-    { symbol: "LINK", baseAPR: 580, ticketAPR: 340, maxDeposit: "100000", decimals: 18 },
-    { symbol: "MKR", baseAPR: 490, ticketAPR: 310, maxDeposit: "10000", decimals: 18 },
-    { symbol: "YFI", baseAPR: 720, ticketAPR: 410, maxDeposit: "1000", decimals: 18 },
-    { symbol: "COMP", baseAPR: 610, ticketAPR: 360, maxDeposit: "50000", decimals: 18 },
-    { symbol: "AAVE", baseAPR: 560, ticketAPR: 330, maxDeposit: "100000", decimals: 18 },
-    { symbol: "WBTC", baseAPR: 410, ticketAPR: 270, maxDeposit: "100", decimals: 8 },
-    { symbol: "BAL", baseAPR: 670, ticketAPR: 390, maxDeposit: "200000", decimals: 18 },
-    { symbol: "CRV", baseAPR: 730, ticketAPR: 420, maxDeposit: "500000", decimals: 18 },
-    { symbol: "SNX", baseAPR: 640, ticketAPR: 370, maxDeposit: "300000", decimals: 18 },
-    { symbol: "SUSHI", baseAPR: 690, ticketAPR: 400, maxDeposit: "500000", decimals: 18 },
-    { symbol: "UNI", baseAPR: 540, ticketAPR: 320, maxDeposit: "200000", decimals: 18 },
+    { id: 1, name: "Tether USD Vault", symbol: "USDT", apr: 100, chain: "Ethereum", decimals: 6, isNative: false },
+    { id: 2, name: "USD Coin Vault", symbol: "USDC", apr: 100, chain: "Ethereum", decimals: 6, isNative: false },
   ];
 
   for (const config of vaultConfigs) {
     await VaultManager.createVault(
+      config.id,
+      config.name,
+      config.symbol,
       deployedTokens[config.symbol].address,
-      config.baseAPR,
-      config.ticketAPR,
-      hre.ethers.parseUnits(config.maxDeposit, config.decimals),
+      config.apr,
+      config.chain,
+      config.decimals,
+      config.isNative,
     );
-    console.log(`✅ ${config.symbol} Vault: ${config.baseAPR / 100}% Base + ${config.ticketAPR / 100}% Ticket`);
+    console.log(`✅ ${config.symbol} Vault: ${config.apr / 100}% APR`);
   }
+
+  // Create Native MEME Vault
+  await VaultManager.createVault(17, "Native MEME Vault", "MEME", NATIVE_TOKEN, 200, "Memecore", 18, true);
+  console.log(`✅ MEME Vault: 2% APR (Native)`);
+
+  // Add to deployedTokens for later use
+  deployedTokens["MEME"] = { address: NATIVE_TOKEN };
 
   // Configure yield for all tokens
   console.log("\n📈 Configuring Yield...");
 
   for (const config of vaultConfigs) {
-    await YieldGenerator.configureYield(deployedTokens[config.symbol].address, config.baseAPR, config.ticketAPR);
-    console.log(`✅ ${config.symbol} Yield configured`);
+    // Split APR into base and ticket (60/40 split)
+    const baseAPR = Math.floor(config.apr * 0.6);
+    const ticketAPR = config.apr - baseAPR;
+    await YieldGenerator.configureYield(deployedTokens[config.symbol].address, baseAPR, ticketAPR);
+    console.log(`✅ ${config.symbol} Yield configured: ${baseAPR / 100}% Base + ${ticketAPR / 100}% Ticket`);
   }
+
+  // Configure yield for Native MEME
+  const memeBaseAPR = Math.floor(200 * 0.6);
+  const memeTicketAPR = 200 - memeBaseAPR;
+  await YieldGenerator.configureYield(NATIVE_TOKEN, memeBaseAPR, memeTicketAPR);
+  console.log(`✅ MEME Yield configured: ${memeBaseAPR / 100}% Base + ${memeTicketAPR / 100}% Ticket`);
 
   // Set prices
   console.log("\n💰 Setting Token Prices...");
@@ -179,20 +174,7 @@ const deployMemePot: DeployFunction = async function (hre: HardhatRuntimeEnviron
   const prices: { [key: string]: string } = {
     USDT: "100000000", // $1.00
     USDC: "100000000", // $1.00
-    WETH: "350000000000", // $3,500.00
-    DAI: "100000000", // $1.00
-    MATIC: "8500000000", // $85.00
-    LINK: "1450000000", // $14.50
-    MKR: "180000000000", // $1,800.00
-    YFI: "750000000000", // $7,500.00
-    COMP: "5200000000", // $52.00
-    AAVE: "9500000000", // $95.00
-    WBTC: "6800000000000", // $68,000.00
-    BAL: "450000000", // $4.50
-    CRV: "7000000", // $0.70
-    SNX: "230000000", // $2.30
-    SUSHI: "8500000", // $0.85
-    UNI: "620000000", // $6.20
+    MEME: "5000000", // $0.05
   };
 
   for (const [symbol, price] of Object.entries(prices)) {
@@ -216,28 +198,12 @@ const deployMemePot: DeployFunction = async function (hre: HardhatRuntimeEnviron
   console.log("✅ Weekly Pool: 343 USDT");
 
   await PrizePoolManager.createPool(
-    "Monthly Meme Jackpot",
-    deployedTokens.USDT.address,
+    "Monthly USDC Jackpot",
+    deployedTokens.USDC.address,
     hre.ethers.parseUnits("1569", 6),
     2,
   );
-  console.log("✅ Monthly Pool: 1,569 USDT");
-
-  await PrizePoolManager.createPool(
-    "Quarterly Lottery",
-    deployedTokens.WETH.address,
-    hre.ethers.parseUnits("8750", 18),
-    3,
-  );
-  console.log("✅ Quarterly Pool: 8,750 WETH");
-
-  await PrizePoolManager.createPool(
-    "Ethereum Grand Prize",
-    deployedTokens.WETH.address,
-    hre.ethers.parseUnits("11585", 18),
-    4,
-  );
-  console.log("✅ Semi-annual Pool: 11,585 WETH");
+  console.log("✅ Monthly Pool: 1,569 USDC");
 
   console.log("\n✨ MemePot Deployment Complete! ✨\n");
   console.log("📋 Contract Addresses:");

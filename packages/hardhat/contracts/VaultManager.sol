@@ -22,11 +22,16 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
 
     // Vault information for each token
     struct VaultInfo {
-        bool isActive; // 1 byte
-        uint16 baseAPR; // 2 bytes - max 65535 bps (655.35%)
-        uint16 ticketAPR; // 2 bytes - max 65535 bps (655.35%)
-        uint96 totalDeposits; // 12 bytes - sufficient for most tokens
-        uint96 maxDepositPerUser; // 12 bytes
+        uint256 id;
+        string name;
+        string token;
+        address tokenContract;
+        uint256 apr;
+        uint256 totalDeposits;
+        string chain;
+        uint256 volume24h;
+        uint8 decimals;
+        bool isNative;
     }
 
     // User deposit information
@@ -71,48 +76,68 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
 
     /**
      * @notice Create a new vault for a token
-     * @param token The ERC20 token address
-     * @param baseAPR The base APR in basis points
-     * @param ticketAPR The ticket APR in basis points
-     * @param maxDepositPerUser Maximum deposit amount per user
+     * @param id The vault ID
+     * @param name The vault name
+     * @param tokenSymbol The token symbol
+     * @param tokenContract The ERC20 token contract address
+     * @param apr The APR percentage
+     * @param chain The blockchain name
+     * @param decimals The token decimals
+     * @param isNative Whether the token is native
      */
     function createVault(
-        address token,
-        uint256 baseAPR,
-        uint256 ticketAPR,
-        uint256 maxDepositPerUser
+        uint256 id,
+        string memory name,
+        string memory tokenSymbol,
+        address tokenContract,
+        uint256 apr,
+        string memory chain,
+        uint8 decimals,
+        bool isNative
     ) external onlyRole(OPERATOR_ROLE) {
-        require(token != address(0), "VaultManager: Invalid token address");
-        require(!vaults[token].isActive, "VaultManager: Vault already exists");
-        require(baseAPR + ticketAPR <= 10000, "VaultManager: Total APR exceeds 100%");
+        require(tokenContract != address(0), "VaultManager: Invalid token address");
+        require(vaults[tokenContract].tokenContract == address(0), "VaultManager: Vault already exists");
 
-        vaults[token] = VaultInfo({
-            isActive: true,
-            baseAPR: uint16(baseAPR),
-            ticketAPR: uint16(ticketAPR),
+        vaults[tokenContract] = VaultInfo({
+            id: id,
+            name: name,
+            token: tokenSymbol,
+            tokenContract: tokenContract,
+            apr: apr,
             totalDeposits: 0,
-            maxDepositPerUser: uint96(maxDepositPerUser)
+            chain: chain,
+            volume24h: 0,
+            decimals: decimals,
+            isNative: isNative
         });
 
-        supportedTokens.push(token);
+        supportedTokens.push(tokenContract);
 
-        emit VaultCreated(token, baseAPR, ticketAPR);
+        emit VaultCreated(tokenContract, apr, 0);
     }
 
     /**
      * @notice Update vault APR settings
      * @param token The ERC20 token address
-     * @param baseAPR The new base APR in basis points
-     * @param ticketAPR The new ticket APR in basis points
+     * @param apr The new APR percentage
      */
-    function updateVaultAPR(address token, uint256 baseAPR, uint256 ticketAPR) external onlyRole(OPERATOR_ROLE) {
-        require(vaults[token].isActive, "VaultManager: Vault not active");
-        require(baseAPR + ticketAPR <= 10000, "VaultManager: Total APR exceeds 100%");
+    function updateVaultAPR(address token, uint256 apr) external onlyRole(OPERATOR_ROLE) {
+        require(vaults[token].tokenContract != address(0), "VaultManager: Vault not active");
 
-        vaults[token].baseAPR = uint16(baseAPR);
-        vaults[token].ticketAPR = uint16(ticketAPR);
+        vaults[token].apr = apr;
 
-        emit VaultUpdated(token, baseAPR, ticketAPR);
+        emit VaultUpdated(token, apr, 0);
+    }
+
+    /**
+     * @notice Update vault 24h volume
+     * @param token The ERC20 token address
+     * @param volume The new 24h volume
+     */
+    function updateVaultVolume(address token, uint256 volume) external onlyRole(OPERATOR_ROLE) {
+        require(vaults[token].tokenContract != address(0), "VaultManager: Vault not active");
+
+        vaults[token].volume24h = volume;
     }
 
     /**
@@ -121,18 +146,10 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
      * @param amount The amount to deposit
      */
     function deposit(address token, uint256 amount) external nonReentrant whenNotPaused {
-        require(vaults[token].isActive, "VaultManager: Vault not active");
+        require(vaults[token].tokenContract != address(0), "VaultManager: Vault not active");
         require(amount > 0, "VaultManager: Amount must be greater than 0");
 
         UserDeposit storage userDeposit = userDeposits[msg.sender][token];
-
-        // Check max deposit limit
-        if (vaults[token].maxDepositPerUser > 0) {
-            require(
-                userDeposit.amount + amount <= vaults[token].maxDepositPerUser,
-                "VaultManager: Exceeds max deposit per user"
-            );
-        }
 
         // Transfer tokens from user
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -145,7 +162,7 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
         userDeposit.amount += uint128(amount);
 
         // Update vault total deposits
-        vaults[token].totalDeposits += uint96(amount);
+        vaults[token].totalDeposits += amount;
 
         // Transfer to YieldGenerator if set
         if (yieldGenerator != address(0)) {
@@ -159,18 +176,10 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
      * @notice Deposit native tokens (MEME) into a vault
      */
     function depositNative() external payable nonReentrant whenNotPaused {
-        require(vaults[NATIVE_TOKEN].isActive, "VaultManager: Native vault not active");
+        require(vaults[NATIVE_TOKEN].tokenContract != address(0), "VaultManager: Native vault not active");
         require(msg.value > 0, "VaultManager: Amount must be greater than 0");
 
         UserDeposit storage userDeposit = userDeposits[msg.sender][NATIVE_TOKEN];
-
-        // Check max deposit limit
-        if (vaults[NATIVE_TOKEN].maxDepositPerUser > 0) {
-            require(
-                userDeposit.amount + msg.value <= vaults[NATIVE_TOKEN].maxDepositPerUser,
-                "VaultManager: Exceeds max deposit per user"
-            );
-        }
 
         // Update user deposit
         if (userDeposit.amount == 0) {
@@ -180,7 +189,7 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
         userDeposit.amount += uint128(msg.value);
 
         // Update vault total deposits
-        vaults[NATIVE_TOKEN].totalDeposits += uint96(msg.value);
+        vaults[NATIVE_TOKEN].totalDeposits += msg.value;
 
         // Transfer to YieldGenerator if set
         if (yieldGenerator != address(0)) {
@@ -197,7 +206,7 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
      * @param percentage The percentage to withdraw (0-100)
      */
     function withdraw(address token, uint256 percentage) external nonReentrant whenNotPaused {
-        require(vaults[token].isActive, "VaultManager: Vault not active");
+        require(vaults[token].tokenContract != address(0), "VaultManager: Vault not active");
         require(percentage > 0 && percentage <= 100, "VaultManager: Invalid percentage");
 
         UserDeposit storage userDeposit = userDeposits[msg.sender][token];
@@ -210,7 +219,7 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
         userDeposit.amount -= uint128(withdrawAmount);
 
         // Update vault total deposits
-        vaults[token].totalDeposits -= uint96(withdrawAmount);
+        vaults[token].totalDeposits -= withdrawAmount;
 
         // Transfer tokens back to user
         // In production, this would request withdrawal from YieldGenerator
@@ -258,7 +267,7 @@ contract VaultManager is AccessControl, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Get vault information
+     * @notice Get vault information for a token
      * @param token The token address
      * @return VaultInfo struct
      */
