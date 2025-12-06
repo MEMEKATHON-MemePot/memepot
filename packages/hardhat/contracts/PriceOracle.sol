@@ -11,6 +11,9 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 contract PriceOracle is AccessControl {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
+    // Address used to represent native token (MEME) in mappings
+    address public constant NATIVE_TOKEN = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+
     // Token address => Price in USD (with 8 decimals precision)
     mapping(address => uint256) public tokenPrices;
 
@@ -142,6 +145,17 @@ contract PriceOracle is AccessControl {
         }
 
         return totalValue;
+    }
+
+    /**
+     * @notice Get the price of native MEME token
+     * @return price The price in USD (8 decimals)
+     */
+    function getNativeTokenPrice() external view returns (uint256 price) {
+        price = tokenPrices[NATIVE_TOKEN];
+        require(price > 0, "PriceOracle: Native token price not available");
+        require(!isPriceStale(NATIVE_TOKEN), "PriceOracle: Native token price is stale");
+        return price;
     }
 
     /**
