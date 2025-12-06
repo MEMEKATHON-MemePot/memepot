@@ -1,14 +1,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatUnits } from "viem";
-import { useAccount } from "wagmi";
+import { parseUnits } from "viem";
 import VaultManageModal from "./VaultManageModal";
 import TransactionProgressModal from "~~/components/TransactionProgressModal";
-import { useAllVaults, useUserVaultBalance } from "~~/hooks/useVaultData";
-
-interface MyVaultsSectionProps {
-  onVaultsUpdate?: (vaults: Vault[]) => void;
-}
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useAllVaults } from "~~/hooks/useVaultData";
 
 interface Vault {
   name: string;
@@ -25,12 +21,11 @@ interface Vault {
   isNative: boolean;
 }
 
-export default function MyVaultsSection({ onVaultsUpdate }: MyVaultsSectionProps) {
+export default function MyVaultsSection() {
   const router = useRouter();
   const [showManageModal, setShowManageModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
-  const { address: userAddress } = useAccount();
 
   const [transactionSteps, setTransactionSteps] = useState<
     Array<{ id: string; label: string; status: "pending" | "processing" | "completed" | "failed" }>
@@ -38,6 +33,11 @@ export default function MyVaultsSection({ onVaultsUpdate }: MyVaultsSectionProps
     { id: "1", label: "Approve Token", status: "pending" },
     { id: "2", label: "Send Transaction", status: "pending" },
   ]);
+
+  // Blockchain write hooks
+  const { writeContractAsync: writeVault } = useScaffoldWriteContract({ contractName: "VaultManager" });
+  const { writeContractAsync: writeUSDT } = useScaffoldWriteContract({ contractName: "USDT" });
+  const { writeContractAsync: writeUSDC } = useScaffoldWriteContract({ contractName: "USDC" });
 
   // Fetch all vaults from contract
   const { vaults: contractVaults, refetch: refetchVaults } = useAllVaults();
@@ -73,7 +73,7 @@ export default function MyVaultsSection({ onVaultsUpdate }: MyVaultsSectionProps
           isNative: vault.isNative,
         };
       })
-      .filter(vault => {
+      .filter(() => {
         // TODO: Filter only vaults where user has balance
         return true;
       }) || [];
@@ -83,38 +83,93 @@ export default function MyVaultsSection({ onVaultsUpdate }: MyVaultsSectionProps
     setShowManageModal(true);
   };
 
-  const handleVaultUpdate = (action: "add" | "withdraw", amount: number, percentage?: number) => {
-    // Refetch vault data after transaction
-    setTimeout(() => {
-      refetchVaults();
-    }, 1500);
-  };
+  const handleTransactionStart = async (action: "add" | "withdraw", amount: number, percentage?: number) => {
+    if (!selectedVault) {
+      console.error("No vault selected");
+      return;
+    }
 
-  const handleTransactionStart = (action: "add" | "withdraw", amount: number, percentage?: number) => {
-    setTransactionSteps([
-      { id: "1", label: "Approve Token", status: "processing" },
-      { id: "2", label: "Send Transaction", status: "pending" },
-    ]);
-    setShowTransactionModal(true);
+    try {
+      const vaultId = BigInt(selectedVault.tokenContract); // Use vault ID from contract
 
-    setTimeout(() => {
-      setTransactionSteps([
-        { id: "1", label: "Approve Token", status: "completed" },
-        { id: "2", label: "Send Transaction", status: "processing" },
-      ]);
+      if (action === "add") {
+        // Deposit logic
+        const depositAmountWei = parseUnits(amount.toString(), selectedVault.decimals);
 
+        if (selectedVault.isNative) {
+          // Native token deposit (MEME) - no approval needed
+          setTransactionSteps([{ id: "1", label: "Deposit Native Token", status: "processing" }]);
+          setShowTransactionModal(true);
+          setShowManageModal(false);
+
+          await writeVault({
+            functionName: "depositNative",
+            value: depositAmountWei,
+          });
+
+          setTransactionSteps([{ id: "1", label: "Deposit Native Token", status: "completed" }]);
+        } else {
+          // ERC20 token deposit (USDT, USDC)
+          setTransactionSteps([
+            { id: "1", label: "Approve Token", status: "processing" },
+            { id: "2", label: "Deposit to Vault", status: "pending" },
+          ]);
+          setShowTransactionModal(true);
+          setShowManageModal(false);
+
+          const writeToken = selectedVault.token === "USDT" ? writeUSDT : writeUSDC;
+
+          // Step 1: Approve
+          await writeToken({
+            functionName: "approve",
+            args: ["0x378891c0455CB7b9348537610Be87f00f15Feb70" as `0x${string}`, depositAmountWei],
+          });
+
+          setTransactionSteps([
+            { id: "1", label: "Approve Token", status: "completed" },
+            { id: "2", label: "Deposit to Vault", status: "processing" },
+          ]);
+
+          // Step 2: Deposit
+          await writeVault({
+            functionName: "deposit",
+            args: [vaultId, depositAmountWei],
+          });
+
+          setTransactionSteps([
+            { id: "1", label: "Approve Token", status: "completed" },
+            { id: "2", label: "Deposit to Vault", status: "completed" },
+          ]);
+        }
+      } else {
+        // Withdraw logic
+        const withdrawPercentage = percentage || 100;
+        const withdrawAmountWei = parseUnits(
+          ((selectedVault.balance * withdrawPercentage) / 100).toString(),
+          selectedVault.decimals,
+        );
+
+        setTransactionSteps([{ id: "1", label: "Withdraw from Vault", status: "processing" }]);
+        setShowTransactionModal(true);
+        setShowManageModal(false);
+
+        await writeVault({
+          functionName: "withdraw",
+          args: [vaultId, withdrawAmountWei],
+        });
+
+        setTransactionSteps([{ id: "1", label: "Withdraw from Vault", status: "completed" }]);
+      }
+
+      // Success - wait and close modal, refetch data
       setTimeout(() => {
-        setTransactionSteps([
-          { id: "1", label: "Approve Token", status: "completed" },
-          { id: "2", label: "Send Transaction", status: "completed" },
-        ]);
-
-        setTimeout(() => {
-          setShowTransactionModal(false);
-          handleVaultUpdate(action, amount, percentage);
-        }, 1500);
-      }, 2000);
-    }, 2000);
+        setShowTransactionModal(false);
+        refetchVaults();
+      }, 1500);
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      setTransactionSteps(prev => prev.map(step => ({ ...step, status: "failed" as const })));
+    }
   };
 
   const handleDepositMore = () => {
