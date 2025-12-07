@@ -5,7 +5,7 @@ import { parseUnits } from "viem";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import deployedContracts from "~~/contracts/deployedContracts";
 
-const STAKING_MANAGER_ADDRESS = "0x9FA6Be38a26921715996B48C32E42D19DaC366B6" as const;
+const STAKING_MANAGER_ADDRESS = "0x9238e156A5bcb6a626Be9239b58168E57ea5e27f" as const;
 const STAKING_MANAGER_ABI = deployedContracts[43522].StakingManager.abi;
 
 function formatAmount(raw: bigint, decimals: number) {

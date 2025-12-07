@@ -27,8 +27,8 @@ const STATUS_MAP: Record<number, "active" | "completed" | "cancelled"> = {
 
 const TOKEN_INFO: Record<string, { symbol: string; decimals: number }> = {
   "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": { symbol: "MEMECORE", decimals: 18 },
-  "0x201fC8Af6FFa65309BaF2b6607ea4ab039661272": { symbol: "USDT", decimals: 6 },
-  "0xe93408d27914d1a9f4298ec86Dbd2A644CeB1cD9": { symbol: "NOCMU", decimals: 18 },
+  "0xaADfb15ddca8c43f15338cA60f3fC4b645Bc9D2E": { symbol: "USDT", decimals: 6 },
+  "0x4c6DE24521345caE4A19292D51e2c1801EF23b30": { symbol: "NOCMU", decimals: 18 },
 };
 
 export default function EventPoolsSection() {
@@ -70,8 +70,6 @@ export default function EventPoolsSection() {
       };
     });
   }, [poolsData]);
-
-  console.log(pools);
 
   return (
     <section className="relative px-6 pb-24">

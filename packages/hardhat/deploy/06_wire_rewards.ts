@@ -14,6 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const stakingManager = await ethers.getContractAt("StakingManager", stakingManagerDep.address);
   const eventPoolManager = await ethers.getContractAt("EventPoolManager", eventPoolManagerDep.address);
+  const rewardsManager = await ethers.getContractAt("RewardsManager", rewardsManagerDep.address);
 
   // setRewardsManager on StakingManager
   const tx1 = await stakingManager
@@ -28,6 +29,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     .setRewardsManager(rewardsManagerDep.address);
   await tx2.wait();
   console.log("✅ EventPoolManager.setRewardsManager:", rewardsManagerDep.address);
+
+  // setStakingManager on RewardsManager (authorize StakingManager to credit rewards)
+  const tx3 = await rewardsManager
+    .connect(await ethers.getSigner(deployer))
+    .setStakingManager(stakingManagerDep.address);
+  await tx3.wait();
+  console.log("✅ RewardsManager.setStakingManager:", stakingManagerDep.address);
+
+  // setEventPoolManager on RewardsManager (authorize EventPoolManager to credit prizes)
+  const tx4 = await rewardsManager
+    .connect(await ethers.getSigner(deployer))
+    .setEventPoolManager(eventPoolManagerDep.address);
+  await tx4.wait();
+  console.log("✅ RewardsManager.setEventPoolManager:", eventPoolManagerDep.address);
 };
 
 export default func;

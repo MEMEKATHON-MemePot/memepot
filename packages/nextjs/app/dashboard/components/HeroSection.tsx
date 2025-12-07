@@ -42,17 +42,6 @@ export default function HeroSection() {
         <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto">
           Review Your Assets and Rewards. Control Your Fortune.
         </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <button className="px-8 py-4 bg-gradient-to-r from-pink-500 to-[#8F2EE7] rounded-full text-white font-semibold text-lg hover:shadow-[0_0_30px_rgba(143,46,231,0.6)] transition-all whitespace-nowrap">
-            <i className="ri-wallet-3-line mr-2"></i>
-            0x742d...3a9f
-          </button>
-          <button className="px-8 py-4 border-2 border-[#8F2EE7] rounded-full text-white font-semibold text-lg hover:bg-[#8F2EE7]/20 hover:shadow-[0_0_30px_rgba(143,46,231,0.4)] transition-all whitespace-nowrap">
-            <i className="ri-refresh-line mr-2"></i>
-            Refresh Data
-          </button>
-        </div>
       </div>
     </section>
   );

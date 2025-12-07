@@ -149,22 +149,6 @@ export default function PrizeParticipationModal({ prize, onClose }: PrizePartici
             </div>
           </div>
 
-          {/* Safety Message */}
-          <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 bg-green-500/20 rounded-full">
-                <i className="ri-shield-check-line text-green-400 text-base"></i>
-              </div>
-              <div>
-                <h4 className="text-white font-bold text-sm mb-1">100% Safe & Transparent</h4>
-                <p className="text-gray-300 text-xs leading-relaxed">
-                  Your participation is automatically managed through your vault deposits. Withdraw Anytime, No
-                  Principal Loss Guaranteed.
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Action Button */}
           <button
             onClick={onClose}

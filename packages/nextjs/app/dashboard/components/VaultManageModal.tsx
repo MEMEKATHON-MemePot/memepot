@@ -162,21 +162,6 @@ export default function VaultManageModal({ vault, onClose, onTransaction }: Vaul
                   </div>
                 </div>
               </div>
-
-              {/* Safety Message */}
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/30 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
-                    <i className="ri-shield-check-fill text-green-400 text-xl"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-green-400 mb-1">100% Safe &amp; Secure</h4>
-                    <p className="text-sm text-gray-300">
-                      Withdraw Anytime, No Principal Loss Guaranteed. Your deposits are always safe and accessible.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -238,21 +223,6 @@ export default function VaultManageModal({ vault, onClose, onTransaction }: Vaul
                     <span className="text-white font-bold">
                       {(vault.balance - parseFloat(calculateRemoveAmount())).toFixed(2)} {vault.token}
                     </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Safety Message */}
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/30 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
-                    <i className="ri-shield-check-fill text-green-400 text-xl"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-green-400 mb-1">Withdraw Anytime</h4>
-                    <p className="text-sm text-gray-300">
-                      No Principal Loss Guaranteed. Your deposits are always safe and accessible.
-                    </p>
                   </div>
                 </div>
               </div>
