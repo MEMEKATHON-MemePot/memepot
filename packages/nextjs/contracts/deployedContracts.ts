@@ -6,6 +6,523 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
   43522: {
+    EventPoolManager: {
+      address: "0x6cEaa1e3Ce9884a3C0Efa988C71934B9B7eEAe5F",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "initialOwner",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "OwnableInvalidOwner",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "OwnableUnauthorizedAccount",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "rewardToken",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "totalPrize",
+              type: "uint256",
+            },
+            {
+              internalType: "enum EventPoolManager.Frequency",
+              name: "frequency",
+              type: "uint8",
+            },
+            {
+              internalType: "uint256",
+              name: "nextDrawAt",
+              type: "uint256",
+            },
+            {
+              internalType: "enum EventPoolManager.PoolStatus",
+              name: "status",
+              type: "uint8",
+            },
+          ],
+          name: "createEventPool",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "points",
+              type: "uint256",
+            },
+          ],
+          name: "enterEventPool",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "eventPoolIds",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "eventPools",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "poolNum",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "rewardToken",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "totalPrize",
+              type: "uint256",
+            },
+            {
+              internalType: "enum EventPoolManager.Frequency",
+              name: "frequency",
+              type: "uint8",
+            },
+            {
+              internalType: "uint256",
+              name: "nextDrawAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "participants",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "totalPoints",
+              type: "uint256",
+            },
+            {
+              internalType: "enum EventPoolManager.PoolStatus",
+              name: "status",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getAllEventPools",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "id",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "poolNum",
+                  type: "uint256",
+                },
+                {
+                  internalType: "address",
+                  name: "rewardToken",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalPrize",
+                  type: "uint256",
+                },
+                {
+                  internalType: "enum EventPoolManager.Frequency",
+                  name: "frequency",
+                  type: "uint8",
+                },
+                {
+                  internalType: "uint256",
+                  name: "nextDrawAt",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "participants",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalPoints",
+                  type: "uint256",
+                },
+                {
+                  internalType: "enum EventPoolManager.PoolStatus",
+                  name: "status",
+                  type: "uint8",
+                },
+              ],
+              internalType: "struct EventPoolManager.EventPool[]",
+              name: "pools",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getEventPoolDetail",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "id",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "poolNum",
+                  type: "uint256",
+                },
+                {
+                  internalType: "address",
+                  name: "rewardToken",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalPrize",
+                  type: "uint256",
+                },
+                {
+                  internalType: "enum EventPoolManager.Frequency",
+                  name: "frequency",
+                  type: "uint8",
+                },
+                {
+                  internalType: "uint256",
+                  name: "nextDrawAt",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "participants",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalPoints",
+                  type: "uint256",
+                },
+                {
+                  internalType: "enum EventPoolManager.PoolStatus",
+                  name: "status",
+                  type: "uint8",
+                },
+              ],
+              internalType: "struct EventPoolManager.EventPool",
+              name: "pool",
+              type: "tuple",
+            },
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "userPoints",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalPoints",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "winRateBps",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "userTotalPoints",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct EventPoolManager.UserPoolInfo",
+              name: "userInfo",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "nextPoolId",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "nextPoolNum",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              internalType: "enum EventPoolManager.PoolStatus",
+              name: "status",
+              type: "uint8",
+            },
+          ],
+          name: "setPoolStatus",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "points",
+              type: "uint256",
+            },
+          ],
+          name: "setUserPointsInPool",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "points",
+              type: "uint256",
+            },
+          ],
+          name: "setUserTotalPoints",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "userPointsInPool",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "userTotalPoints",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        owner: "@openzeppelin/contracts/access/Ownable.sol",
+        renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
+        transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
+      },
+      deployedOnBlock: 2833900,
+    },
     MEMECORE: {
       address: "0xc1efE2f90E3547E655c69BcEd0d1Dc9f983Bf9cf",
       abi: [

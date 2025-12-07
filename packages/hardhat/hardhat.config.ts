@@ -22,6 +22,8 @@ const deployerPrivateKey =
   process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ?? "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 // If not set, it uses our block explorers default API keys.
 const etherscanApiKey = process.env.ETHERSCAN_V2_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
+const DEMO_USER = process.env.DEMO_USER_ADDRESS || "";
+const REAL_USER = process.env.REAL_USER_ADDRESS || "";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -54,6 +56,8 @@ const config: HardhatUserConfig = {
       // By default, it will take the first Hardhat account as the deployer
       default: 0,
     },
+    demoUser: { default: DEMO_USER },
+    realUser: { default: REAL_USER },
   },
   networks: {
     // View the networks that are pre-configured.

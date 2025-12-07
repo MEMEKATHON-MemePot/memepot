@@ -13,17 +13,17 @@ const poolStyles = {
 
 const mockEventPoolsBase: EventPool[] = [
   {
-    id: "1", // 고유값이여야 함
-    poolNum: 1, // 몇번째 열리는 풀인지 관한 값. 종료되면 1씩 증가
+    id: "1",
+    poolNum: 1,
     name: "MEMECORE Pool",
     tokenSymbol: "MEMECORE",
     tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "11,585",
+    totalPrize: "11,500", // 예: 11,500 M
     currency: "M",
     frequency: "1D",
     nextDraw: getNextDraw("1D").getTime(),
-    participants: 5328,
-    totalPoints: 101233,
+    participants: 5000,
+    totalPoints: 50000, // 5000명 * 10포인트
     status: "active",
     prizeBreakdown: [
       { place: 1, percentage: 60 },
@@ -37,12 +37,12 @@ const mockEventPoolsBase: EventPool[] = [
     name: "MEMECORE Pool",
     tokenSymbol: "MEMECORE",
     tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "23,112",
+    totalPrize: "23,000",
     currency: "M",
     frequency: "1W",
     nextDraw: getNextDraw("1W").getTime(),
-    participants: 1234,
-    totalPoints: 22388,
+    participants: 2000,
+    totalPoints: 40000, // 2000명 * 20포인트
     status: "active",
     prizeBreakdown: [
       { place: 1, percentage: 60 },
@@ -56,12 +56,12 @@ const mockEventPoolsBase: EventPool[] = [
     name: "MEMECORE Pool",
     tokenSymbol: "MEMECORE",
     tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "34,183",
+    totalPrize: "34,500",
     currency: "M",
     frequency: "1M",
     nextDraw: getNextDraw("1M").getTime(),
-    participants: 876,
-    totalPoints: 34000,
+    participants: 1000,
+    totalPoints: 50000, // 1000명 * 50포인트
     status: "active",
     prizeBreakdown: [
       { place: 1, percentage: 60 },
@@ -75,12 +75,12 @@ const mockEventPoolsBase: EventPool[] = [
     name: "USDT Pool",
     tokenSymbol: "USDT",
     tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "11,585",
+    totalPrize: "11,500",
     currency: "USDT",
     frequency: "1D",
     nextDraw: getNextDraw("1D").getTime(),
-    participants: 5328,
-    totalPoints: 101233,
+    participants: 3000,
+    totalPoints: 30000, // 3000명 * 10포인트
     status: "active",
     prizeBreakdown: [
       { place: 1, percentage: 60 },
@@ -94,12 +94,12 @@ const mockEventPoolsBase: EventPool[] = [
     name: "USDT Pool",
     tokenSymbol: "USDT",
     tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "23,112",
+    totalPrize: "23,000",
     currency: "USDT",
     frequency: "1W",
     nextDraw: getNextDraw("1W").getTime(),
-    participants: 1234,
-    totalPoints: 22388,
+    participants: 1500,
+    totalPoints: 45000, // 1500명 * 30포인트
     status: "active",
     prizeBreakdown: [
       { place: 1, percentage: 60 },
@@ -113,12 +113,12 @@ const mockEventPoolsBase: EventPool[] = [
     name: "NOCMU Special Pool",
     tokenSymbol: "NOCMU",
     tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "159,513",
+    totalPrize: "160,000",
     currency: "NOCMU",
     frequency: "1W",
     nextDraw: getNextDraw("1W").getTime(),
-    participants: 5328,
-    totalPoints: 101233,
+    participants: 4000,
+    totalPoints: 120000, // 4000명 * 30포인트
     status: "active",
     prizeBreakdown: [
       { place: 1, percentage: 60 },
