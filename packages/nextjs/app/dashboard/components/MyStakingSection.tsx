@@ -166,7 +166,7 @@ export default function MyStakingSection({ myStakings = [], isLoading }: MyStaki
           address: STAKING_MANAGER_ADDRESS,
           abi: STAKING_MANAGER_ABI,
           functionName: "unstake",
-          args: [selectedStaking.tokenAddress, BigInt(amount)],
+          args: [selectedStaking.tokenAddress, BigInt(percentage ?? 300)],
         });
 
         // 실제 블록 컨펌 대기 시뮬레이션
