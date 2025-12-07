@@ -9,6 +9,8 @@ import PrizeWinningsModal from "./components/PrizeWinningsModal";
 import SummarySection from "./components/SummarySection";
 import VaultManageModal from "./components/VaultManageModal";
 import VaultRewardsModal from "./components/VaultRewardsModal";
+import CosmicBackground from "~~/components/CosmicBackground";
+import StarsBackground from "~~/components/StarsBackground";
 import { ToastContainer } from "~~/components/ToastNotification";
 import TransactionProgressModal from "~~/components/TransactionProgressModal";
 import { useToast } from "~~/hooks/useToast";
@@ -60,34 +62,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0118] via-[#1a0a2e] to-[#0a0118] text-white relative overflow-hidden">
-      {/* Cosmic Background Effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse"></div>
-        <div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-pink-600/20 rounded-full blur-[120px] animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
-
-      {/* Stars Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(50)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              opacity: Math.random() * 0.7 + 0.3,
-            }}
-          ></div>
-        ))}
-      </div>
+      <CosmicBackground />
+      <StarsBackground />
 
       <main className="relative z-10 pt-24 pb-20">
         <div className="max-w-7xl mx-auto px-6">

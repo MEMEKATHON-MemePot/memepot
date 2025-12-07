@@ -10,21 +10,22 @@ import { Toaster } from "react-hot-toast";
 import { WagmiProvider } from "wagmi";
 import { Header } from "~~/components/Header";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
+import { usePreventAutoConnect } from "~~/hooks/usePreventAutoConnect";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
-
-// import { Footer } from "~~/components/Footer";
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const isLoadingPage = pathname === "/";
   const isReadyPage = pathname === "/ready";
 
+  // Prevent auto-connect on page load
+  usePreventAutoConnect();
+
   return (
     <>
       <div className={`flex flex-col min-h-screen `}>
         {!isLoadingPage && !isReadyPage && <Header />}
         <main className="relative flex flex-col flex-1">{children}</main>
-        {/* {!isLoadingPage && !isReadyPage && <Footer />} */}
       </div>
       <Toaster />
     </>
@@ -49,11 +50,12 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
   }, []);
 
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <WagmiProvider config={wagmiConfig} reconnectOnMount={false}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           avatar={BlockieAvatar}
           theme={mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()}
+          initialChain={undefined}
         >
           <ProgressBar height="3px" color="#AD47FF" />
           <ScaffoldEthApp>{children}</ScaffoldEthApp>

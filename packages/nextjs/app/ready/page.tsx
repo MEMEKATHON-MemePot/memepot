@@ -77,24 +77,6 @@ export default function ReadyPage() {
             {/* Button Glow */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-400 to-purple-500 blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
           </button>
-
-          {/* Decorative Elements */}
-          <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 text-purple-300/80 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-              <span>Stake & Earn</span>
-            </div>
-            <div className="hidden md:block w-1 h-1 bg-purple-400/50 rounded-full"></div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }}></div>
-              <span>Win Big</span>
-            </div>
-            <div className="hidden md:block w-1 h-1 bg-purple-400/50 rounded-full"></div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" style={{ animationDelay: "1s" }}></div>
-              <span>Join Community</span>
-            </div>
-          </div>
         </div>
       </div>
 

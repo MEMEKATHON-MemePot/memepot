@@ -6,16 +6,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title MockERC20
- * @notice Mock ERC20 token for testing purposes
+ * @notice Mock ERC20: USDT, USDC 토큰만 초기 서비스에서 지원
  */
 contract MockERC20 is ERC20, Ownable {
     uint8 private _decimals;
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint8 decimals_
-    ) ERC20(name, symbol) Ownable(msg.sender) {
+    constructor(string memory name, string memory symbol, uint8 decimals_) ERC20(name, symbol) Ownable(msg.sender) {
         _decimals = decimals_;
     }
 
@@ -30,15 +26,6 @@ contract MockERC20 is ERC20, Ownable {
      */
     function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
-    }
-
-    /**
-     * @notice Faucet function for testing - anyone can claim tokens
-     * @param amount Amount to claim
-     */
-    function faucet(uint256 amount) external {
-        require(amount <= 1000000 * 10 ** _decimals, "MockERC20: Faucet amount too large");
-        _mint(msg.sender, amount);
     }
 
     /**

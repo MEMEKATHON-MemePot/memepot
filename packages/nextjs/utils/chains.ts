@@ -20,7 +20,7 @@ export const insectarium = defineChain({
   blockExplorers: {
     default: {
       name: "Blockscout",
-      url: "https://explorer.insectarium.memecore.net",
+      url: "https://insectarium.blockscout.memecore.com",
     },
   },
   testnet: true,

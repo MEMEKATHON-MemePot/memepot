@@ -20,12 +20,12 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/about",
   },
   {
-    label: "Vaults",
-    href: "/vaults",
+    label: "Staking",
+    href: "/staking",
   },
   {
-    label: "Prizes",
-    href: "/prizes",
+    label: "24/7 event pools",
+    href: "/eventpool",
   },
   {
     label: "Dashboard",
@@ -70,7 +70,6 @@ export const Header = () => {
           {/* Wallet Button & Faucet */}
           <div className="hidden md:flex items-center">
             <RainbowKitCustomConnectButton />
-            {/* {isLocalNetwork && <FaucetButton />} */}
           </div>
 
           {/* Mobile Menu Button */}
