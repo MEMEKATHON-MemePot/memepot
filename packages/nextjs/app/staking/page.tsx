@@ -11,6 +11,9 @@ export default function StakingPage() {
     functionName: "getAllStakingPoolInfos",
   });
 
+  // Fetch MEME token price
+  const memePriceUSD = 1.67;
+
   const formmatedStakingList: Staking[] =
     (stakingPoolList as any[] | undefined)?.map(pool => ({
       id: pool.id.toString(),
@@ -29,8 +32,8 @@ export default function StakingPage() {
   let volume24h = 0;
 
   formmatedStakingList.forEach(staking => {
-    tvl += Number(staking.totalDeposits);
-    volume24h += Number(staking.volume24h);
+    tvl += staking.isNative ? Number(staking.totalDeposits) * memePriceUSD : Number(staking.totalDeposits);
+    volume24h += staking.isNative ? Number(staking.volume24h) * memePriceUSD : Number(staking.totalDeposits);
   });
 
   return (

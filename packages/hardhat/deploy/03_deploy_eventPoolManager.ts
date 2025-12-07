@@ -3,7 +3,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployer, demoUser, realUser } = await hre.getNamedAccounts();
+  const { deployer, demoUser, realUser, tester1, tester2, tester3 } = await hre.getNamedAccounts();
   const { deploy, getOrNull } = hre.deployments;
   const { ethers } = hre;
 
@@ -178,11 +178,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await tx.wait();
   console.log(`✅ demoUser userTotalPoints[${demoUser}] = ${demoUserBalance.toString()}`);
 
-  // realUser에게도 참여 테스트용 잔고를 약간 부여 (원하면 조정 가능)
+  // (2) realUser에게도 참여 테스트용 잔고를 약간 부여 (원하면 조정 가능)
   const realUserBalance = 100_000n;
   tx = await EventPoolManager.setUserTotalPoints(realUser, realUserBalance);
   await tx.wait();
   console.log(`✅ realUser userTotalPoints[${realUser}] = ${realUserBalance.toString()}`);
+
+  // (3) tester1: 500,000 포인트
+  const tester1Balance = 500_000n;
+  tx = await EventPoolManager.setUserTotalPoints(tester1, tester1Balance);
+  await tx.wait();
+  console.log(`✅ tester1 userTotalPoints[${tester1}] = ${tester1Balance.toString()}`);
+
+  // (4) tester2: 300,000 포인트
+  const tester2Balance = 300_000n;
+  tx = await EventPoolManager.setUserTotalPoints(tester2, tester2Balance);
+  await tx.wait();
+  console.log(`✅ tester2 userTotalPoints[${tester2}] = ${tester2Balance.toString()}`);
+
+  // (5) tester3: 300,000 포인트
+  const tester3Balance = 600_000n;
+  tx = await EventPoolManager.setUserTotalPoints(tester3, tester3Balance);
+  await tx.wait();
+  console.log(`✅ tester3 userTotalPoints[${tester3}] = ${tester3Balance.toString()}`);
 
   // 가짜 유저 주소들 (임의)
   const fakeUsers = [

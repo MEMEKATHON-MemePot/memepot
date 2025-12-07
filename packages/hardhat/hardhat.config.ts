@@ -24,6 +24,9 @@ const deployerPrivateKey =
 const etherscanApiKey = process.env.ETHERSCAN_V2_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
 const DEMO_USER = process.env.DEMO_USER_ADDRESS || "";
 const REAL_USER = process.env.REAL_USER_ADDRESS || "";
+const TESTER1 = process.env.TESTER1 || "";
+const TESTER2 = process.env.TESTER2 || "";
+const TESTER3 = process.env.TESTER3 || "";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -58,6 +61,9 @@ const config: HardhatUserConfig = {
     },
     demoUser: { default: DEMO_USER },
     realUser: { default: REAL_USER },
+    tester1: { default: TESTER1 },
+    tester2: { default: TESTER2 },
+    tester3: { default: TESTER3 },
   },
   networks: {
     // View the networks that are pre-configured.

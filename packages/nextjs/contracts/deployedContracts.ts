@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   43522: {
     EventPoolManager: {
-      address: "0x23f0e698658E00a8Beab8777161E324775D3C5D4",
+      address: "0xeaE48f050A572461BB33Ff15f2973a8e47aD8Bb5",
       abi: [
         {
           inputs: [
@@ -521,7 +521,7 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 2834539,
+      deployedOnBlock: 2835587,
     },
     MEMECORE: {
       address: "0xc1efE2f90E3547E655c69BcEd0d1Dc9f983Bf9cf",
@@ -1204,7 +1204,7 @@ const deployedContracts = {
       deployedOnBlock: 2831443,
     },
     StakingManager: {
-      address: "0x9FA6Be38a26921715996B48C32E42D19DaC366B6",
+      address: "0xa5932426FE7369576b37Bb2bE81084C47Cb51308",
       abi: [
         {
           inputs: [],
@@ -2423,7 +2423,7 @@ const deployedContracts = {
         supportsInterface: "@openzeppelin/contracts/access/AccessControl.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 2830176,
+      deployedOnBlock: 2835865,
     },
     TokenBalanceHelper: {
       address: "0xa1E4067c0E52741422098bA6F5D07aE1661e8117",

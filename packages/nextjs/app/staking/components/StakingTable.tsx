@@ -588,13 +588,19 @@ export default function StakingTable({ stakingList, refetchStakings }: StakingTa
                   {/* Total Deposits */}
                   <td className="px-6 py-4 text-center">
                     <div className="font-semibold text-white text-sm">
-                      {Number(staking.totalDeposits).toLocaleString()}
+                      {staking.isNative
+                        ? (Number(staking.totalDeposits) * memePriceUSD).toLocaleString()
+                        : Number(staking.totalDeposits).toLocaleString()}
                     </div>
                   </td>
 
                   {/* 24h Volume */}
                   <td className="px-6 py-4 text-center">
-                    <div className="font-semibold text-white text-sm">{Number(staking.volume24h).toLocaleString()}</div>
+                    <div className="font-semibold text-white text-sm">
+                      {staking.isNative
+                        ? (Number(staking.volume24h) * memePriceUSD).toLocaleString()
+                        : Number(staking.volume24h).toLocaleString()}
+                    </div>
                   </td>
 
                   {/* Chain */}

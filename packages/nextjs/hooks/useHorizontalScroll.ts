@@ -23,11 +23,11 @@ export const useHorizontalScroll = () => {
       if (e.deltaY > 0 && !isAtEnd) {
         // 아래로 스크롤 → 오른쪽으로 (빠르게)
         e.preventDefault();
-        velocityRef.current = e.deltaY * 1.5;
+        velocityRef.current = e.deltaY * 3;
       } else if (e.deltaY < 0 && !isAtStart) {
         // 위로 스크롤 → 왼쪽으로 (빠르게)
         e.preventDefault();
-        velocityRef.current = e.deltaY * 1.5;
+        velocityRef.current = e.deltaY * 3;
       } else {
         // 끝에 도달하면 velocity 리셋
         velocityRef.current = 0;
