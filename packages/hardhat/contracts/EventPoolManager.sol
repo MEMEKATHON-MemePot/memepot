@@ -3,15 +3,16 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+interface IRewardsManager {
+    function creditEventPrize(address user, uint256 amount) external;
+}
+
 contract EventPoolManager is Ownable {
-    // 풀 상태: 0=active, 1=completed, 2=cancelled
     enum PoolStatus {
         Active,
         Completed,
         Cancelled
     }
-
-    // 빈도: 0=1D, 1=1W, 2=1M
     enum Frequency {
         Daily,
         Weekly,
@@ -37,34 +38,41 @@ contract EventPoolManager is Ownable {
         uint256 userTotalPoints;
     }
 
-    // poolId -> EventPool
+    struct UserEventWin {
+        uint256 poolId;
+        uint256 poolNum;
+        uint256 rank;
+        uint256 prizeAmount;
+        uint256 wonAt;
+        bool claimed;
+    }
+
     mapping(uint256 => EventPool) public eventPools;
-    // 전체 poolId 리스트
     uint256[] public eventPoolIds;
 
-    // poolId -> user -> 이 풀에 사용한 포인트
     mapping(uint256 => mapping(address => uint256)) public userPointsInPool;
-
-    // 시스템 전체 포인트 (예: 스테이킹에서 적립된 누적 포인트)
     mapping(address => uint256) public userTotalPoints;
+    mapping(address => UserEventWin[]) private userWins;
 
-    uint256 public nextPoolId = 1; // 프론트 id와 대응 (문자열이지만 여기선 숫자)
-    uint256 public nextPoolNum = 1; // 프론트 poolNum
+    IRewardsManager public rewardsManager;
+
+    uint256 public nextPoolId = 1;
+    uint256 public nextPoolNum = 1;
+
+    event RewardsManagerUpdated(address indexed oldRewardsManager, address indexed newRewardsManager);
+    event WinnersRewarded(uint256 indexed poolId, address[] winners, uint256[] prizeAmounts);
 
     constructor(address initialOwner) Ownable(initialOwner) {}
 
-    // =========================
-    //       POOL CREATION
-    // =========================
+    // ADMIN WIRING
+    function setRewardsManager(address _rewardsManager) external onlyOwner {
+        require(_rewardsManager != address(0), "EventPoolManager: invalid");
+        address old = address(rewardsManager);
+        rewardsManager = IRewardsManager(_rewardsManager);
+        emit RewardsManagerUpdated(old, _rewardsManager);
+    }
 
-    /**
-     * @notice 이벤트 풀 생성
-     * @param rewardToken tokenAddress
-     * @param totalPrize  totalPrize (콤마 제거 후, decimals 포함 값)
-     * @param frequency   0=1D,1=1W,2=1M
-     * @param nextDrawAt  nextDraw (timestamp)
-     * @param status      0=active,1=completed,2=cancelled
-     */
+    // POOL CREATION
     function createEventPool(
         address rewardToken,
         uint256 totalPrize,
@@ -88,14 +96,7 @@ contract EventPoolManager is Ownable {
         eventPoolIds.push(poolId);
     }
 
-    // =========================
-    //        VIEW FUNCS
-    // =========================
-
-    /**
-     * @notice 모든 이벤트 풀 리스트 조회
-     * 프론트 EventPool 리스트와 1:1 매핑 가능
-     */
+    // VIEW
     function getAllEventPools() external view returns (EventPool[] memory pools) {
         uint256 len = eventPoolIds.length;
         pools = new EventPool[](len);
@@ -104,10 +105,6 @@ contract EventPoolManager is Ownable {
         }
     }
 
-    /**
-     * @notice 특정 풀 + 유저 상세 정보 조회
-     * 프론트에서 eventPoolDetail + 유저 정보에 사용
-     */
     function getEventPoolDetail(
         uint256 poolId,
         address user
@@ -121,7 +118,7 @@ contract EventPoolManager is Ownable {
 
         uint256 winBps = 0;
         if (userPts > 0 && totalPts > 0) {
-            winBps = (userPts * 1e4) / totalPts; // 10000 = 100%
+            winBps = (userPts * 1e4) / totalPts;
         }
 
         userInfo = UserPoolInfo({
@@ -132,55 +129,36 @@ contract EventPoolManager is Ownable {
         });
     }
 
-    // =========================
-    //   DEMO / POINTS SETTERS
-    // =========================
+    function getUserEventWins(address user) external view returns (UserEventWin[] memory wins) {
+        wins = userWins[user];
+    }
 
-    /**
-     * @notice 데모용: 특정 유저의 시스템 전체 포인트를 강제로 세팅
-     * 프론트에서 "유저가 총 획득한 포인트 수"를 보여줄 때 사용
-     */
+    // DEMO / POINTS SETTERS
     function setUserTotalPoints(address user, uint256 points) external onlyOwner {
         userTotalPoints[user] = points;
     }
 
-    /**
-     * @notice 데모용: 특정 풀에 유저 포인트/참여 기록을 강제로 세팅
-     *  - participants, totalPoints도 함께 갱신
-     * @dev 배포 스크립트에서 네 지갑 기준 초기 포인트 세팅에 사용
-     */
     function setUserPointsInPool(uint256 poolId, address user, uint256 points) external onlyOwner {
         EventPool storage pool = eventPools[poolId];
         require(pool.id != 0, "Pool not found");
 
         uint256 prevPoints = userPointsInPool[poolId][user];
 
-        // participants 카운트 (v1에서 감소는 생략 가능)
         if (prevPoints == 0 && points > 0) {
             pool.participants += 1;
         }
 
-        // totalPoints 보정
         pool.totalPoints = pool.totalPoints - prevPoints + points;
         userPointsInPool[poolId][user] = points;
     }
 
-    /**
-     * @notice 데모/관리용: 풀의 status를 변경 (예: active → completed)
-     */
     function setPoolStatus(uint256 poolId, PoolStatus status) external onlyOwner {
         EventPool storage pool = eventPools[poolId];
         require(pool.id != 0, "Pool not found");
         pool.status = status;
     }
 
-    // ===== 실제 참여 로직 =====
-
-    /**
-     * @notice 이벤트 풀에 포인트를 사용해 참가
-     * @param poolId 참여할 풀 ID
-     * @param points 이번에 추가로 쓸 포인트 (누적)
-     */
+    // PARTICIPATION
     function enterEventPool(uint256 poolId, uint256 points) external {
         require(points > 0, "points must be > 0");
 
@@ -189,14 +167,11 @@ contract EventPoolManager is Ownable {
         require(pool.status == PoolStatus.Active, "Pool not active");
         require(block.timestamp < pool.nextDrawAt, "Draw already passed");
 
-        // 유저가 가진 총 포인트 체크
         uint256 available = userTotalPoints[msg.sender];
         require(available >= points, "Not enough points");
 
-        // 총 포인트에서 차감
         userTotalPoints[msg.sender] = available - points;
 
-        // 해당 풀에 누적
         uint256 prevPoints = userPointsInPool[poolId][msg.sender];
         uint256 newPoints = prevPoints + points;
 
@@ -206,5 +181,42 @@ contract EventPoolManager is Ownable {
 
         userPointsInPool[poolId][msg.sender] = newPoints;
         pool.totalPoints += points;
+    }
+
+    // WIN REWARDING HOOK
+    function rewardWinners(
+        uint256 poolId,
+        address[] calldata winners,
+        uint256[] calldata prizeAmounts
+    ) external onlyOwner {
+        require(address(rewardsManager) != address(0), "EventPoolManager: RewardsManager not set");
+
+        EventPool storage pool = eventPools[poolId];
+        require(pool.id != 0, "Pool not found");
+        require(winners.length == prizeAmounts.length, "EventPoolManager: length mismatch");
+
+        for (uint256 i = 0; i < winners.length; i++) {
+            address winner = winners[i];
+            uint256 amount = prizeAmounts[i];
+            if (winner == address(0) || amount == 0) continue;
+
+            _recordUserWin(poolId, pool.poolNum, winner, amount, i + 1);
+            rewardsManager.creditEventPrize(winner, amount);
+        }
+
+        emit WinnersRewarded(poolId, winners, prizeAmounts);
+    }
+
+    function _recordUserWin(uint256 poolId, uint256 poolNum, address winner, uint256 amount, uint256 rank) internal {
+        userWins[winner].push(
+            UserEventWin({
+                poolId: poolId,
+                poolNum: poolNum,
+                rank: rank,
+                prizeAmount: amount,
+                wonAt: block.timestamp,
+                claimed: false
+            })
+        );
     }
 }

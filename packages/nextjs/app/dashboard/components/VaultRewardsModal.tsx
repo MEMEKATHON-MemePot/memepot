@@ -124,13 +124,18 @@ export default function VaultRewardsModal({ rewards, totalValue, onClose, onClai
           <div className="flex gap-4">
             <button
               onClick={onClose}
-              className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all whitespace-nowrap"
+              className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleClaim}
-              className="flex-1 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:opacity-90 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap"
+              disabled={totalValue <= 0}
+              className={`flex-1 py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-semibold transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap ${
+                totalValue <= 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:opacity-90 hover:shadow-xl hover:scale-105 cursor-pointer"
+              }`}
             >
               <i className="ri-hand-coin-fill text-xl"></i>
               Claim All Rewards

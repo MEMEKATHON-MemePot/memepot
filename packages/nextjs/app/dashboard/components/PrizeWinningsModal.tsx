@@ -16,7 +16,6 @@ interface PrizeWinningsModalProps {
 export default function PrizeWinningsModal({ winnings, onClose, onClaim }: PrizeWinningsModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -40,96 +39,66 @@ export default function PrizeWinningsModal({ winnings, onClose, onClaim }: Prize
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <div
         ref={modalRef}
-        className="relative w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-[#1a0a2e] to-[#0a0118] rounded-2xl border border-purple-500/30 shadow-2xl"
+        className="relative w-full max-w-md max-h-[85vh] overflow-y-auto bg-gradient-to-br from-[#1a0a2e] to-[#0a0118] rounded-2xl border border-yellow-500/30 shadow-2xl"
       >
-        {/* Confetti Effect */}
-        {winnings.status === "pending" && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-            {[...Array(30)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-pulse"
-                style={{
-                  top: `${Math.random() * 100}%`,
-                  left: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  opacity: Math.random() * 0.7 + 0.3,
-                }}
-              ></div>
-            ))}
-          </div>
-        )}
-
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 bg-purple-500/20 hover:bg-purple-500/40 rounded-lg flex items-center justify-center transition-all hover:scale-110 z-10 cursor-pointer"
+          className="absolute top-4 right-4 w-10 h-10 bg-purple-500/20 hover:bg-purple-500/40 rounded-xl flex items-center justify-center transition-all hover:scale-110 z-10 cursor-pointer"
         >
-          <i className="ri-close-line text-xl"></i>
+          <i className="ri-close-line text-xl text-gray-300"></i>
         </button>
 
         {/* Content */}
-        <div className="p-8 relative z-10">
+        <div className="p-6 relative z-10">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div
-              className={`w-20 h-20 bg-gradient-to-br ${winnings.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-purple-500/50 ${winnings.status === "pending" ? "animate-pulse" : ""}`}
+              className={`w-16 h-16 bg-gradient-to-br ${winnings.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}
             >
-              <i className="ri-trophy-fill text-white text-4xl"></i>
+              <i className="ri-trophy-fill text-white text-3xl"></i>
             </div>
-            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-              🎉 Congratulations! 🎉
-            </h2>
-            <p className="text-gray-400">You won a prize!</p>
+            <h2 className="text-2xl font-bold mb-1 text-white">Congratulations!</h2>
+            <p className="text-gray-400 text-sm">You won a prize</p>
           </div>
 
-          {/* Prize Info */}
-          <div
-            className={`bg-gradient-to-br ${winnings.gradient}/10 rounded-xl border ${winnings.gradient.replace("from-", "border-").replace(" to-", "/30 border-")} p-6 mb-6`}
-          >
-            <div className="text-center">
-              <p className="text-sm text-gray-400 mb-2">{winnings.poolName}</p>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                  {winnings.amount}
-                </span>
-                <span className="text-3xl font-bold text-purple-400">{winnings.currency}</span>
-              </div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/40 rounded-full">
+          {/* Prize Amount Card */}
+          <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl border border-yellow-500/20 p-5 mb-5">
+            <p className="text-xs text-gray-400 mb-2 text-center uppercase tracking-wider">{winnings.poolName}</p>
+            <div className="flex items-baseline justify-center gap-2 mb-3">
+              <span className="text-4xl font-bold text-white">{winnings.amount}</span>
+              <span className="text-xl font-semibold text-yellow-400">{winnings.currency}</span>
+            </div>
+            <div className="flex justify-center">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-sm">
                 <i className="ri-medal-fill text-yellow-400"></i>
-                <span className="text-yellow-400 font-bold">{winnings.place}</span>
-              </div>
+                <span className="text-yellow-400 font-semibold">{winnings.place}</span>
+              </span>
             </div>
           </div>
 
           {/* Prize Details */}
-          <div className="bg-[#0a0118]/60 rounded-xl border border-purple-500/20 p-6 mb-6">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <i className="ri-information-line text-purple-400"></i>
-              Prize Details
-            </h3>
+          <div className="bg-[#0a0118] rounded-xl border border-purple-500/20 p-4 mb-5">
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Prize Pool</span>
-                <span className="text-white font-semibold">{winnings.poolName}</span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Prize Pool</span>
+                <span className="text-white font-medium">{winnings.poolName}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Your Position</span>
-                <span className="text-yellow-400 font-semibold">{winnings.place}</span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Position</span>
+                <span className="text-yellow-400 font-medium">{winnings.place}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Prize Amount</span>
-                <span className="text-cyan-400 font-bold">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Amount</span>
+                <span className="text-cyan-400 font-medium">
                   {winnings.amount} {winnings.currency}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Status</span>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Status</span>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    winnings.status === "pending"
-                      ? "bg-green-500/20 text-green-400 border border-green-500/40"
-                      : "bg-gray-500/20 text-gray-400 border border-gray-500/40"
+                  className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                    winnings.status === "pending" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
                   }`}
                 >
                   {winnings.status === "pending" ? "Ready to Claim" : "Claimed"}
@@ -138,37 +107,37 @@ export default function PrizeWinningsModal({ winnings, onClose, onClaim }: Prize
             </div>
           </div>
 
-          {/* Celebration Message */}
+          {/* Info Message */}
           {winnings.status === "pending" && (
-            <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl border border-yellow-500/30 p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center shrink-0">
-                  <i className="ri-sparkling-fill text-yellow-400 text-xl"></i>
+            <div className="bg-[#0a0118] rounded-xl border border-green-500/20 p-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
+                  <i className="ri-sparkling-fill text-green-400"></i>
                 </div>
-                <div>
-                  <h4 className="font-bold text-yellow-400 mb-1">Amazing Win!</h4>
-                  <p className="text-sm text-gray-300">
-                    Your prize is ready to be claimed. Click the button below to receive your winnings!
-                  </p>
-                </div>
+                <p className="text-sm text-gray-300">Your prize is ready! Click below to claim your winnings.</p>
               </div>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer"
+              className="flex-1 py-3 bg-gray-700/50 hover:bg-gray-700 border border-gray-600/50 rounded-xl font-semibold transition-all cursor-pointer text-gray-300"
             >
               {winnings.status === "pending" ? "Later" : "Close"}
             </button>
             {winnings.status === "pending" && (
               <button
                 onClick={handleClaim}
-                className="flex-1 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 hover:opacity-90 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+                disabled={!winnings.amount || parseFloat(winnings.amount) <= 0}
+                className={`flex-1 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                  !winnings.amount || parseFloat(winnings.amount) <= 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:from-yellow-400 hover:to-orange-400 cursor-pointer"
+                }`}
               >
-                <i className="ri-hand-coin-fill text-xl"></i>
+                <i className="ri-hand-coin-fill"></i>
                 Claim Now
               </button>
             )}

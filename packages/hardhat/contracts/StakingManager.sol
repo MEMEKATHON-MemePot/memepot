@@ -7,6 +7,10 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 
+interface IRewardsManager {
+    function creditStakingReward(address user, uint256 amount) external;
+}
+
 /**
  * @title StakingManager
  * @notice Manages user staking deposits and withdrawals for multiple ERC20 tokens
@@ -19,6 +23,10 @@ contract StakingManager is AccessControl, ReentrancyGuard, Pausable {
 
     // Address used to represent native token (e.g. MEME) in mappings
     address public constant NATIVE_TOKEN = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+
+    uint256 private constant YEAR = 365 days;
+    uint256 private constant MEME_PRICE_BPS = 16700; // 1.67 * 10000
+    uint256 private constant STABLE_PRICE_BPS = 10000; // 1.0 * 10000
 
     // Staking pool information
     struct StakingInfo {
@@ -37,7 +45,7 @@ contract StakingManager is AccessControl, ReentrancyGuard, Pausable {
     // User staking information per token
     struct UserDeposit {
         uint128 amount; // staked amount
-        uint64 depositTime; // first stake timestamp
+        uint64 depositTime; // first stake or last claim timestamp
     }
 
     // Token address => StakingInfo
@@ -206,6 +214,61 @@ contract StakingManager is AccessControl, ReentrancyGuard, Pausable {
         }
 
         emit DepositedNative(msg.sender, msg.value);
+    }
+
+    /**
+     * @notice Claim staking rewards (fixed APR) and credit to RewardsManager
+     */
+    function claimStakingReward(address token) external nonReentrant whenNotPaused {
+        require(vaults[token].tokenContract != address(0), "StakingManager: Pool not active");
+        require(rewardsManager != address(0), "StakingManager: RewardsManager not set");
+
+        address user = msg.sender;
+        UserDeposit storage userDeposit = userDeposits[user][token];
+        require(userDeposit.amount > 0, "StakingManager: No deposits");
+        require(userDeposit.depositTime > 0, "StakingManager: No depositTime");
+
+        uint256 rewardAmount = _calculateStakingReward(user, token);
+        require(rewardAmount > 0, "StakingManager: No rewards");
+
+        // Reset depositTime to now so next claim counts from here
+        userDeposit.depositTime = uint64(block.timestamp);
+
+        IRewardsManager(rewardsManager).creditStakingReward(user, rewardAmount);
+    }
+
+    function _calculateStakingReward(address user, address token) internal view returns (uint256) {
+        UserDeposit storage userDeposit = userDeposits[user][token];
+        StakingInfo storage info = vaults[token];
+
+        if (userDeposit.amount == 0 || userDeposit.depositTime == 0 || info.apr == 0) {
+            return 0;
+        }
+
+        uint256 timeElapsed = block.timestamp - uint256(userDeposit.depositTime);
+        if (timeElapsed == 0) return 0;
+
+        uint256 stakedAmount = uint256(userDeposit.amount); // raw token units
+
+        // 1) Token price in basis points
+        uint256 priceBps;
+        if (token == NATIVE_TOKEN) {
+            priceBps = MEME_PRICE_BPS; // 1.67 USD
+        } else {
+            priceBps = STABLE_PRICE_BPS; // 1.0 USD for USDT/USDC
+        }
+
+        // 2) Value in "USD bps" (not real USD decimal, but proportional)
+        uint256 valueUsdBps = stakedAmount * priceBps;
+
+        // 3) APR & time-based reward in "USD bps"
+        // rewardUsdBps = valueUsdBps * apr% * timeElapsed / YEAR / 100
+        uint256 rewardUsdBps = (valueUsdBps * info.apr * timeElapsed) / YEAR / 100;
+
+        // 4) Convert USD bps to MEME amount (approx): divide by MEME price
+        uint256 rewardMemesRaw = rewardUsdBps / MEME_PRICE_BPS;
+
+        return rewardMemesRaw;
     }
 
     // ==== Unstake/Withdrawal ====

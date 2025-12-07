@@ -1,21 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import HeroSection from "./components/HeroSection";
-import MyVaultsSection from "./components/MyVaultsSection";
+import MyStakingSection from "./components/MyStakingSection";
 import PrizeParticipationModal from "./components/PrizeParticipationModal";
 import PrizeStatusSection from "./components/PrizeStatusSection";
 import PrizeWinningsModal from "./components/PrizeWinningsModal";
 import SummarySection from "./components/SummarySection";
 import VaultManageModal from "./components/VaultManageModal";
 import VaultRewardsModal from "./components/VaultRewardsModal";
+import { useAccount } from "wagmi";
 import CosmicBackground from "~~/components/CosmicBackground";
 import StarsBackground from "~~/components/StarsBackground";
 import { ToastContainer } from "~~/components/ToastNotification";
 import TransactionProgressModal from "~~/components/TransactionProgressModal";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { useToast } from "~~/hooks/useToast";
 
 export default function Dashboard() {
+  const { address } = useAccount();
   const [showVaultManageModal, setShowVaultManageModal] = useState(false);
   const [showVaultRewardsModal, setShowVaultRewardsModal] = useState(false);
   const [showPrizeParticipationModal, setShowPrizeParticipationModal] = useState(false);
@@ -31,6 +34,71 @@ export default function Dashboard() {
     { id: "2", label: "Send Transaction", status: "pending" },
   ]);
 
+  const {
+    data: userInfoData,
+    isLoading: isUserInfoLoading,
+    error: userInfoError,
+  } = useScaffoldReadContract({
+    contractName: "UserDashboard",
+    functionName: "getUserInfo",
+    args: [address],
+    query: {
+      enabled: !!address,
+    },
+  } as const);
+
+  console.log("Dashboard address →", address);
+  console.log("UserDashboard raw data →", userInfoData);
+  console.log("UserDashboard loading/error →", isUserInfoLoading, userInfoError);
+
+  const userInfo = useMemo(() => {
+    if (!userInfoData) return null;
+    const ui = userInfoData as any;
+    console.log("ui inside useMemo →", ui);
+
+    const totalTickets = Number(ui.totalTickets ?? 0);
+
+    const myStakings = (ui.myStakings as any[]).map(s => ({
+      stakingPoolId: String(s.stakingPoolId),
+      poolName: s.poolName as string,
+      tokenSymbol: s.tokenSymbol as string,
+      tokenAddress: s.tokenAddress as string,
+      stakedAmount: s.stakedAmount.toString(),
+      apr: s.apr.toString(),
+      earned: s.earned.toString(),
+      stakedAt: Number(s.stakedAt),
+      lastClaimAt: Number(s.lastClaimAt),
+    }));
+
+    const unclaimedRewards = {
+      fixedAprRewards: ui.unclaimedRewards.fixedAprRewards.toString(),
+      eventPoolPrizes: ui.unclaimedRewards.eventPoolPrizes.toString(),
+      totalUnclaimed: ui.unclaimedRewards.totalUnclaimed.toString(),
+    };
+
+    const eventPoolWinHistory = (ui.eventPoolWinHistory as any[]).map(w => ({
+      eventPoolId: String(w.eventPoolId),
+      eventPoolName: "",
+      poolNum: Number(w.poolNum),
+      rank: Number(w.rank),
+      prizeAmount: w.prizeAmount.toString(),
+      wonAt: Number(w.wonAt),
+      status: (w.status === 1 ? "claimed" : "unclaimed") as "claimed" | "unclaimed",
+      claimedAt: Number(w.claimedAt ?? 0) || undefined,
+    }));
+
+    return {
+      userWalletAddress: address,
+      totalTickets,
+      myStakings,
+      unclaimedRewards,
+      eventPoolWinHistory,
+      eventPoolParticipations: [] as any[],
+    };
+  }, [userInfoData, address]);
+
+  console.log("UserDashboard.getUserInfo (mapped) →", userInfo);
+
   const simulateTransaction = () => {
     setShowTransactionProgress(true);
     setTransactionSteps([
@@ -38,14 +106,12 @@ export default function Dashboard() {
       { id: "2", label: "Send Transaction", status: "pending" },
     ]);
 
-    // Simulate approve step
     setTimeout(() => {
       setTransactionSteps([
         { id: "1", label: "Approve Token", status: "completed" },
         { id: "2", label: "Send Transaction", status: "processing" },
       ]);
 
-      // Simulate transaction step
       setTimeout(() => {
         setTransactionSteps([
           { id: "1", label: "Approve Token", status: "completed" },
@@ -68,13 +134,20 @@ export default function Dashboard() {
       <main className="relative z-10 pt-24 pb-20">
         <div className="max-w-7xl mx-auto px-6">
           <HeroSection />
-          <SummarySection />
-          <MyVaultsSection />
-          <PrizeStatusSection />
+          <SummarySection
+            myStakings={userInfo?.myStakings}
+            unclaimedRewards={userInfo?.unclaimedRewards}
+            isLoading={isUserInfoLoading}
+          />
+          <MyStakingSection myStakings={userInfo?.myStakings} isLoading={isUserInfoLoading} />
+          <PrizeStatusSection
+            eventPoolWinHistory={userInfo?.eventPoolWinHistory}
+            totalTickets={userInfo?.totalTickets}
+            isLoading={isUserInfoLoading}
+          />
         </div>
       </main>
 
-      {/* Modals */}
       {showVaultManageModal && (
         <VaultManageModal
           vault={{

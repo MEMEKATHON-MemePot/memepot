@@ -20,7 +20,6 @@ export default function VaultManageModal({ vault, onClose, onTransaction }: Vaul
   const [removePercentage, setRemovePercentage] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -62,139 +61,127 @@ export default function VaultManageModal({ vault, onClose, onTransaction }: Vaul
     return ((vault.balance * removePercentage) / 100).toFixed(2);
   };
 
+  const isConfirmDisabled =
+    (activeTab === "add" && (!amount || parseFloat(amount) <= 0)) || (activeTab === "remove" && removePercentage <= 0);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       <div
         ref={modalRef}
-        className="relative w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-[#1a0a2e] to-[#0a0118] rounded-2xl border border-purple-500/30 shadow-2xl"
+        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-gradient-to-br from-[#1a0a2e] to-[#0a0118] rounded-2xl border border-purple-500/30 shadow-2xl"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 bg-purple-500/20 hover:bg-purple-500/40 rounded-lg flex items-center justify-center transition-all hover:scale-110 z-10 cursor-pointer"
+          className="absolute top-4 right-4 w-10 h-10 bg-purple-500/20 hover:bg-purple-500/40 rounded-xl flex items-center justify-center transition-all hover:scale-110 z-10 cursor-pointer"
         >
-          <i className="ri-close-line text-xl"></i>
+          <i className="ri-close-line text-xl text-gray-300"></i>
         </button>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-6">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div
-              className={`w-20 h-20 bg-gradient-to-br ${vault.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-purple-500/50`}
+              className={`w-14 h-14 bg-gradient-to-br ${vault.gradient} rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg`}
             >
-              <i className={`${vault.icon} text-white text-4xl`}></i>
+              <i className={`${vault.icon} text-white text-2xl`}></i>
             </div>
-            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Manage Vault
-            </h2>
-            <p className="text-gray-400">{vault.name}</p>
+            <h2 className="text-xl font-bold text-white mb-1">Manage Vault</h2>
+            <p className="text-gray-400 text-sm">{vault.name}</p>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 bg-[#0a0118]/60 p-1 rounded-xl">
+          <div className="flex gap-1 mb-5 bg-[#0a0118] p-1 rounded-xl border border-purple-500/20">
             <button
               onClick={() => setActiveTab("add")}
-              className={`flex-1 py-3 rounded-lg font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === "add"
                   ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   : "text-gray-400 hover:text-white"
               }`}
             >
-              Add Deposit
+              <i className="ri-add-line mr-1"></i>
+              Deposit
             </button>
             <button
               onClick={() => setActiveTab("remove")}
-              className={`flex-1 py-3 rounded-lg font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === "remove"
                   ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   : "text-gray-400 hover:text-white"
               }`}
             >
+              <i className="ri-subtract-line mr-1"></i>
               Withdraw
             </button>
           </div>
 
           {/* Add Deposit Tab */}
           {activeTab === "add" && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Amount Input */}
               <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-3">Amount to Deposit</label>
+                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">Amount</label>
                 <div className="relative">
                   <input
                     type="number"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
-                    className="w-full bg-[#0a0118]/60 border border-purple-500/30 rounded-xl px-4 py-4 pr-32 text-white text-lg focus:outline-none focus:border-purple-500/60 transition-all"
+                    className="w-full bg-[#0a0118] border border-purple-500/20 rounded-xl px-4 py-3.5 pr-28 text-white focus:outline-none focus:border-purple-500/50 transition-all"
                     placeholder="0.00"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                     <button
                       onClick={handleMaxClick}
-                      className="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg text-sm font-semibold transition-all whitespace-nowrap cursor-pointer"
+                      className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg text-xs font-semibold text-purple-400 transition-all cursor-pointer"
                     >
                       MAX
                     </button>
-                    <span className="text-white font-semibold shrink-0">{vault.token}</span>
+                    <span className="text-gray-400 text-sm font-medium">{vault.token}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-2 text-sm">
-                  <span className="text-gray-400">Available Balance</span>
-                  <span className="text-white font-semibold">1,000.00 {vault.token}</span>
+                <div className="flex items-center justify-between mt-2 text-xs">
+                  <span className="text-gray-500">Available</span>
+                  <span className="text-gray-400">1,000.00 {vault.token}</span>
                 </div>
               </div>
 
-              {/* APY Breakdown */}
-              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/30 p-6">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              {/* APY Info */}
+              <div className="bg-[#0a0118] rounded-xl border border-purple-500/20 p-4">
+                <div className="flex items-center gap-2 mb-3">
                   <i className="ri-pie-chart-fill text-purple-400"></i>
-                  APY Breakdown
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Fixed APY</span>
-                    <span className="text-green-400 font-bold">{vault.apy}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Ticket Contribution</span>
-                    <span className="text-cyan-400 font-bold">{vault.ticketRate}x</span>
-                  </div>
+                  <span className="text-sm font-semibold text-white">APY Breakdown</span>
                 </div>
-              </div>
-
-              {/* Safety Message */}
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/30 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
-                    <i className="ri-shield-check-fill text-green-400 text-xl"></i>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Fixed APY</span>
+                    <span className="text-green-400 font-semibold">{vault.apy}%</span>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-green-400 mb-1">100% Safe &amp; Secure</h4>
-                    <p className="text-sm text-gray-300">
-                      Withdraw Anytime, No Principal Loss Guaranteed. Your deposits are always safe and accessible.
-                    </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Ticket Rate</span>
+                    <span className="text-cyan-400 font-semibold">{vault.ticketRate}x</span>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Remove Deposit Tab */}
+          {/* Remove Tab */}
           {activeTab === "remove" && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Percentage Buttons */}
               <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-3">Select Withdrawal Amount</label>
-                <div className="grid grid-cols-4 gap-3 mb-4">
+                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">Withdraw Amount</label>
+                <div className="grid grid-cols-4 gap-2 mb-3">
                   {[25, 50, 75, 100].map(percentage => (
                     <button
                       key={percentage}
                       onClick={() => handlePercentageClick(percentage)}
-                      className={`py-3 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                      className={`py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                         removePercentage === percentage
                           ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                          : "bg-[#0a0118]/60 border border-purple-500/30 text-gray-300 hover:border-purple-500/60"
+                          : "bg-[#0a0118] border border-purple-500/20 text-gray-300 hover:border-purple-500/40"
                       }`}
                     >
                       {percentage}%
@@ -209,50 +196,34 @@ export default function VaultManageModal({ vault, onClose, onTransaction }: Vaul
                   max="100"
                   value={removePercentage}
                   onChange={e => setRemovePercentage(parseInt(e.target.value))}
-                  className="w-full h-2 bg-[#0a0118]/60 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-1.5 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, rgb(147, 51, 234) 0%, rgb(219, 39, 119) ${removePercentage}%, rgba(10, 1, 24, 0.6) ${removePercentage}%, rgba(10, 1, 24, 0.6) 100%)`,
+                    background: `linear-gradient(to right, rgb(147, 51, 234) 0%, rgb(219, 39, 119) ${removePercentage}%, rgba(10, 1, 24, 0.8) ${removePercentage}%, rgba(10, 1, 24, 0.8) 100%)`,
                   }}
                 />
               </div>
 
-              {/* Withdrawal Summary */}
-              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/30 p-6">
-                <h3 className="text-lg font-bold mb-4">Withdrawal Summary</h3>
+              {/* Summary */}
+              <div className="bg-[#0a0118] rounded-xl border border-purple-500/20 p-4">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Current Balance</span>
-                    <span className="text-white font-bold">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Current Balance</span>
+                    <span className="text-white font-medium">
                       {vault.balance.toFixed(2)} {vault.token}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Withdrawal Amount</span>
-                    <span className="text-cyan-400 font-bold">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Withdraw</span>
+                    <span className="text-cyan-400 font-medium">
                       {calculateRemoveAmount()} {vault.token}
                     </span>
                   </div>
-                  <div className="h-px bg-purple-500/30"></div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Remaining Balance</span>
-                    <span className="text-white font-bold">
+                  <div className="h-px bg-purple-500/20"></div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Remaining</span>
+                    <span className="text-white font-medium">
                       {(vault.balance - parseFloat(calculateRemoveAmount())).toFixed(2)} {vault.token}
                     </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Safety Message */}
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/30 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
-                    <i className="ri-shield-check-fill text-green-400 text-xl"></i>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-green-400 mb-1">Withdraw Anytime</h4>
-                    <p className="text-sm text-gray-300">
-                      No Principal Loss Guaranteed. Your deposits are always safe and accessible.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -260,19 +231,22 @@ export default function VaultManageModal({ vault, onClose, onTransaction }: Vaul
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-4 mt-8">
+          <div className="flex gap-3 mt-6">
             <button
               onClick={onClose}
-              className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer"
+              className="flex-1 py-3 bg-gray-700/50 hover:bg-gray-700 border border-gray-600/50 rounded-xl font-semibold transition-all cursor-pointer text-gray-300"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className={`flex-1 py-3 bg-gradient-to-r ${vault.gradient} hover:opacity-90 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer`}
+              disabled={isConfirmDisabled}
+              className={`flex-1 py-3 bg-gradient-to-r ${vault.gradient} rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                isConfirmDisabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90 cursor-pointer"
+              }`}
             >
-              <i className="ri-check-line text-xl"></i>
-              {activeTab === "add" ? "Confirm Deposit" : "Confirm Withdrawal"}
+              <i className="ri-check-line"></i>
+              {activeTab === "add" ? "Deposit" : "Withdraw"}
             </button>
           </div>
         </div>
