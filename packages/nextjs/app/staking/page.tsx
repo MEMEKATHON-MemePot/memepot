@@ -28,12 +28,10 @@ export default function StakingPage() {
   let tvl = 0;
   let volume24h = 0;
 
-  const stakingTvl = formmatedStakingList.forEach(staking => {
+  formmatedStakingList.forEach(staking => {
     tvl += Number(staking.totalDeposits);
     volume24h += Number(staking.volume24h);
   });
-
-  console.log(stakingTvl);
 
   return (
     <div className="min-h-screen bg-[#0a0118]">

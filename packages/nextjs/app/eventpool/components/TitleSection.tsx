@@ -1,8 +1,8 @@
 "use client";
 
-export default function HeroSection() {
+export default function TitleSection() {
   return (
-    <section className="relative pt-32 pb-20 px-6">
+    <section className="relative pt-32 pb-24 px-6 h-full">
       <div className="max-w-7xl mx-auto">
         {/* Brewing Pot Animation */}
         <div className="flex justify-center mb-12">

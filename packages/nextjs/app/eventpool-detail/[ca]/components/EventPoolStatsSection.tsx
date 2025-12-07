@@ -7,7 +7,7 @@ interface PrizeStatsSectionProps {
   };
 }
 
-export default function PrizeStatsSection({ prize }: PrizeStatsSectionProps) {
+export default function EventPoolStatsSection({ prize }: PrizeStatsSectionProps) {
   // Calculate progress bar width safely
   const getTicketPercentage = () => {
     if (!prize?.totalTickets || prize.totalTickets === 0) return 0;

@@ -25,7 +25,7 @@ export const menuLinks: HeaderMenuLink[] = [
   },
   {
     label: "24/7 event pools",
-    href: "/prizes",
+    href: "/eventpool",
   },
   {
     label: "Dashboard",

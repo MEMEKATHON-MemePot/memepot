@@ -1,21 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { EventPool } from "~~/app/eventpool/types/EventPool";
 
 interface ParticipateModalProps {
-  prize: {
-    name: string;
-    totalPrize: string;
-    currency: string;
-    gradient: string;
-    userTickets: number;
-    winChance: string;
-    totalTickets: number;
-  };
+  eventpool: EventPool;
   onClose: () => void;
 }
 
-export default function ParticipateModal({ prize, onClose }: ParticipateModalProps) {
-  const [ticketsToUse, setTicketsToUse] = useState(0);
-  const [newWinChance, setNewWinChance] = useState(prize.winChance);
+export default function EventPoolParticipateModal({ eventpool, onClose }: ParticipateModalProps) {
+  const [newWinChance, setNewWinChance] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -35,57 +27,16 @@ export default function ParticipateModal({ prize, onClose }: ParticipateModalPro
 
   useEffect(() => {
     try {
-      // Calculate new win chance based on tickets
-      const currentChance = parseFloat(prize.winChance);
-      if (isNaN(currentChance)) {
-        setError("Invalid win chance format");
-        return;
-      }
-
-      if (prize.totalTickets <= 0) {
-        setError("Invalid total tickets");
-        return;
-      }
-
-      const additionalChance = (ticketsToUse / prize.totalTickets) * 100;
-      const total = currentChance + additionalChance;
-      setNewWinChance(total.toFixed(4) + "%");
-      setError(null);
+      // Calculate new win chance based on TotalPoints
     } catch (err) {
       setError("Error calculating win chance");
       console.error("Win chance calculation error:", err);
     }
-  }, [ticketsToUse, prize.totalTickets, prize.winChance]);
+  }, []);
 
-  const handleMaxClick = () => {
-    try {
-      if (prize.userTickets && !isNaN(prize.userTickets)) {
-        setTicketsToUse(prize.userTickets);
-      }
-    } catch (err) {
-      setError("Error setting maximum tickets");
-      console.error("Max click error:", err);
-    }
-  };
+  const handleMaxClick = () => {};
 
-  const handleConfirm = () => {
-    try {
-      if (ticketsToUse <= 0) {
-        setError("Please select at least one ticket");
-        return;
-      }
-      if (ticketsToUse > prize.userTickets) {
-        setError("Cannot use more tickets than available");
-        return;
-      }
-      // Handle participation logic here
-      console.log("Participating with", ticketsToUse, "tickets");
-      onClose();
-    } catch (err) {
-      setError("Error confirming participation");
-      console.error("Confirm error:", err);
-    }
-  };
+  const handleConfirm = () => {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -106,14 +57,14 @@ export default function ParticipateModal({ prize, onClose }: ParticipateModalPro
           {/* Header */}
           <div className="text-center mb-8">
             <div
-              className={`w-20 h-20 bg-gradient-to-br ${prize.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-purple-500/50 animate-pulse`}
+              className={`w-20 h-20 bg-gradient-to-br ${eventpool.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-purple-500/50 animate-pulse`}
             >
               <i className="ri-ticket-fill text-white text-4xl"></i>
             </div>
             <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               Participate in Prize Pool
             </h2>
-            <p className="text-gray-400">{prize.name}</p>
+            <p className="text-gray-400">{eventpool.name}</p>
           </div>
 
           {/* Error Message */}
@@ -129,30 +80,27 @@ export default function ParticipateModal({ prize, onClose }: ParticipateModalPro
               <p className="text-sm text-gray-400 mb-2">Total Prize Pool</p>
               <div className="flex items-center justify-center gap-2">
                 <span className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                  {prize.totalPrize}
+                  {eventpool.totalPrize}
                 </span>
-                <span className="text-2xl font-bold text-purple-400">{prize.currency}</span>
+                <span className="text-2xl font-bold text-purple-400">{eventpool.currency}</span>
               </div>
             </div>
           </div>
 
-          {/* Ticket Input */}
+          {/* Points Input */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-300 mb-3">Number of Tickets to Use</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-3">Number of Pointss to Use</label>
             <div className="relative">
               <input
                 type="number"
-                value={ticketsToUse}
-                onChange={e => {
-                  const value = parseInt(e.target.value) || 0;
-                  if (!isNaN(value)) {
-                    setTicketsToUse(Math.min(Math.max(0, value), prize.userTickets || 0));
-                  }
+                value={0}
+                onChange={() => {
+                  setNewWinChance(0);
                 }}
                 className="w-full bg-[#0a0118]/60 border border-purple-500/30 rounded-xl px-4 py-4 text-white text-lg focus:outline-none focus:border-purple-500/60 transition-all"
                 placeholder="0"
                 min="0"
-                max={prize.userTickets || 0}
+                max={1000}
               />
               <button
                 onClick={handleMaxClick}
@@ -162,8 +110,8 @@ export default function ParticipateModal({ prize, onClose }: ParticipateModalPro
               </button>
             </div>
             <div className="flex items-center justify-between mt-2 text-sm">
-              <span className="text-gray-400">Available Tickets</span>
-              <span className="text-white font-semibold">{(prize.userTickets || 0).toLocaleString()}</span>
+              <span className="text-gray-400">Available Pointss</span>
+              <span className="text-white font-semibold">0</span>
             </div>
           </div>
 
@@ -171,7 +119,7 @@ export default function ParticipateModal({ prize, onClose }: ParticipateModalPro
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-[#0a0118]/60 rounded-xl border border-purple-500/20 p-4">
               <p className="text-xs text-gray-400 mb-2">Current Win Chance</p>
-              <p className="text-2xl font-bold text-gray-300">{prize.winChance}</p>
+              <p className="text-2xl font-bold text-gray-300">{eventpool.poolNum}</p>
             </div>
             <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/40 p-4">
               <p className="text-xs text-gray-400 mb-2">New Win Chance</p>
@@ -204,8 +152,8 @@ export default function ParticipateModal({ prize, onClose }: ParticipateModalPro
             </button>
             <button
               onClick={handleConfirm}
-              disabled={ticketsToUse === 0}
-              className={`flex-1 py-3 bg-gradient-to-r ${prize.gradient} hover:opacity-90 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+              disabled={true}
+              className={`flex-1 py-3 bg-gradient-to-r ${eventpool.gradient} hover:opacity-90 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
             >
               <i className="ri-check-line text-xl"></i>
               Confirm Participation

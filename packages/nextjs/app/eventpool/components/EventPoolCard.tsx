@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PrizePool } from "./PrizePoolsSection";
+import { EventPool } from "../types/EventPool";
 
 interface PrizePoolCardProps {
-  pool: PrizePool;
+  pool: EventPool;
 }
 
-export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
+export default function EventPoolCard({ pool }: PrizePoolCardProps) {
+  const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -18,6 +19,12 @@ export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
   const router = useRouter();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const calculateTimeLeft = () => {
       const difference = pool.nextDraw - Date.now();
 
@@ -35,21 +42,16 @@ export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
     const timer = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(timer);
-  }, [pool.nextDraw]);
+  }, [pool.nextDraw, mounted]);
 
   const handleViewDetails = () => {
-    router.push(`/prizes-detail/${pool.id}`);
+    router.push(`/eventpool-detail/${pool.tokenAddress ?? undefined}`);
     window.scrollTo(0, 0);
   };
 
-  return (
-    <div className="group relative bg-gradient-to-br from-[#1a0a2e]/80 to-[#0a0118]/80 backdrop-blur-sm rounded-2xl border border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 overflow-hidden hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30">
-      {/* Animated Background Glow */}
-      <div
-        className={`absolute inset-0 bg-gradient-to-br ${pool.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
-      ></div>
-
-      {/* Energy Particles */}
+  const renderParticles = () => {
+    if (!mounted) return null;
+    return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {[...Array(6)].map((_, i) => (
           <div
@@ -61,9 +63,21 @@ export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
               animationDelay: `${i * 0.3}s`,
               opacity: 0.6,
             }}
-          ></div>
+          />
         ))}
       </div>
+    );
+  };
+
+  return (
+    <div className="group relative bg-gradient-to-br from-[#1a0a2e]/80 to-[#0a0118]/80 backdrop-blur-sm rounded-2xl border border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 overflow-hidden hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30">
+      {/* Animated Background Glow */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${pool.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+      />
+
+      {/* Energy Particles */}
+      {renderParticles()}
 
       <div className="relative p-6 space-y-6">
         {/* Header */}
@@ -81,13 +95,13 @@ export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
           <div
             className={`w-14 h-14 bg-gradient-to-br ${pool.gradient} rounded-xl flex items-center justify-center shadow-lg animate-pulse`}
           >
-            <i className={`${pool.icon} text-white text-2xl`}></i>
+            <i className={`${pool.icon} text-white text-2xl`} />
           </div>
         </div>
 
         {/* Prize Amount */}
         <div className="text-center py-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
           <div className="relative">
             <p className="text-sm text-gray-400 mb-2">Total Prize Pool</p>
             <div className="flex items-center justify-center gap-2">
@@ -104,7 +118,7 @@ export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-400">Next Draw In:</span>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               <span className="text-xs text-green-400 font-semibold">LIVE</span>
             </div>
           </div>
@@ -151,18 +165,18 @@ export default function PrizePoolCard({ pool }: PrizePoolCardProps) {
           onClick={handleViewDetails}
           className={`w-full py-3 bg-gradient-to-r ${pool.gradient} hover:opacity-90 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap`}
         >
-          <i className="ri-ticket-fill text-lg"></i>
+          <i className="ri-ticket-fill text-lg" />
           View Prize Details
-          <i className="ri-arrow-right-line"></i>
+          <i className="ri-arrow-right-line" />
         </button>
       </div>
 
       {/* Corner Sparkle Effect */}
-      <div className="absolute top-4 right-4 w-3 h-3 bg-cyan-400 rounded-full blur-sm animate-ping opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <div className="absolute top-4 right-4 w-3 h-3 bg-cyan-400 rounded-full blur-sm animate-ping opacity-0 group-hover:opacity-100 transition-opacity" />
       <div
         className="absolute bottom-4 left-4 w-2 h-2 bg-pink-400 rounded-full blur-sm animate-ping opacity-0 group-hover:opacity-100 transition-opacity"
         style={{ animationDelay: "0.5s" }}
-      ></div>
+      />
     </div>
   );
 }

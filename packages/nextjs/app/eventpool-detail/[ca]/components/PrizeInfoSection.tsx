@@ -1,26 +1,12 @@
 import { useEffect, useState } from "react";
+import { EventPool } from "~~/app/eventpool/types/EventPool";
 
 interface PrizeInfoSectionProps {
-  prize: {
-    name: string;
-    totalPrize: string;
-    currency: string;
-    frequency: string;
-    duration: string;
-    nextDraw: number;
-    icon: string;
-    gradient: string;
-    description: string;
-    prizeBreakdown: Array<{
-      place: string;
-      amount: string;
-      percentage: string;
-    }>;
-  };
+  eventPool: EventPool;
   onParticipate: () => void;
 }
 
-export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSectionProps) {
+export default function PrizeInfoSection({ eventPool, onParticipate }: PrizeInfoSectionProps) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -30,7 +16,7 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = prize.nextDraw - Date.now();
+      const difference = eventPool.nextDraw - Date.now();
 
       if (difference > 0) {
         setTimeLeft({
@@ -54,7 +40,7 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
     const timer = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(timer);
-  }, [prize.nextDraw]);
+  }, [eventPool.nextDraw]);
 
   return (
     <section className="mb-12">
@@ -64,17 +50,17 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
           {/* Header */}
           <div className="flex items-start gap-4">
             <div
-              className={`w-20 h-20 bg-gradient-to-br ${prize.gradient} rounded-2xl flex items-center justify-center shadow-2xl shadow-purple-500/50 animate-pulse shrink-0`}
+              className={`w-20 h-20 bg-gradient-to-br ${eventPool.gradient} rounded-2xl flex items-center justify-center shadow-2xl shadow-purple-500/50 animate-pulse shrink-0`}
             >
-              <i className={`${prize.icon} text-white text-4xl`}></i>
+              <i className={`${eventPool.icon} text-white text-4xl`}></i>
             </div>
             <div className="flex-1">
               <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                {prize.name}
+                {eventPool.name}
               </h1>
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="px-4 py-1.5 bg-purple-500/20 border border-purple-500/40 rounded-full text-sm text-purple-300 font-semibold">
-                  {prize.frequency}
+                  {eventPool.frequency}
                 </span>
                 <span className="px-4 py-1.5 bg-green-500/20 border border-green-500/40 rounded-full text-sm text-green-300 font-semibold flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -84,11 +70,6 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
             </div>
           </div>
 
-          {/* Description */}
-          <div className="bg-gradient-to-br from-[#1a0a2e]/80 to-[#0a0118]/80 backdrop-blur-sm rounded-2xl border border-purple-500/30 p-6">
-            <p className="text-gray-300 leading-relaxed">{prize.description}</p>
-          </div>
-
           {/* Prize Breakdown */}
           <div className="bg-gradient-to-br from-[#1a0a2e]/80 to-[#0a0118]/80 backdrop-blur-sm rounded-2xl border border-purple-500/30 p-6">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -96,14 +77,14 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
               Prize Breakdown
             </h3>
             <div className="space-y-3">
-              {prize.prizeBreakdown?.map((item, index) => (
+              {eventPool.prizeBreakdown?.map((item, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 bg-[#0a0118]/60 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-10 h-10 bg-gradient-to-br ${prize.gradient} rounded-lg flex items-center justify-center text-sm font-bold shrink-0`}
+                      className={`w-10 h-10 bg-gradient-to-br ${eventPool.gradient} rounded-lg flex items-center justify-center text-sm font-bold shrink-0`}
                     >
                       {index + 1}
                     </div>
@@ -111,7 +92,7 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
                   </div>
                   <div className="text-right">
                     <div className="text-xl font-bold text-cyan-400">
-                      {item.amount} {prize.currency}
+                      {item.percentage} {eventPool.currency}
                     </div>
                     <div className="text-sm text-gray-400">{item.percentage}</div>
                   </div>
@@ -125,27 +106,16 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
         <div className="space-y-6">
           {/* Total Prize Pool */}
           <div className="relative bg-gradient-to-br from-[#1a0a2e]/80 to-[#0a0118]/80 backdrop-blur-sm rounded-2xl border border-purple-500/30 p-8 overflow-hidden">
-            <div className={`absolute inset-0 bg-gradient-to-br ${prize.gradient} opacity-10`}></div>
+            <div className={`absolute inset-0 bg-gradient-to-br ${eventPool.gradient} opacity-10`}></div>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
 
             <div className="relative text-center">
               <p className="text-gray-400 mb-4 text-lg">Total Prize Pool</p>
               <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                  {prize.totalPrize}
+                  {eventPool.totalPrize}
                 </span>
-                <span className="text-4xl font-bold text-purple-400">{prize.currency}</span>
-              </div>
-
-              {/* Animated Sparkles */}
-              <div className="flex justify-center gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"
-                    style={{ animationDelay: `${i * 0.2}s` }}
-                  ></div>
-                ))}
+                <span className="text-4xl font-bold text-purple-400">{eventPool.currency}</span>
               </div>
             </div>
           </div>
@@ -198,7 +168,7 @@ export default function PrizeInfoSection({ prize, onParticipate }: PrizeInfoSect
           {/* Participate Button */}
           <button
             onClick={onParticipate}
-            className={`w-full py-4 bg-gradient-to-r ${prize.gradient} hover:opacity-90 rounded-xl font-bold text-lg transition-all shadow-2xl hover:shadow-purple-500/50 hover:scale-105 flex items-center justify-center gap-3 whitespace-nowrap`}
+            className={`w-full py-4 bg-gradient-to-r ${eventPool.gradient} hover:opacity-90 rounded-xl font-bold text-lg transition-all shadow-2xl hover:shadow-purple-500/50 hover:scale-105 flex items-center justify-center gap-3 whitespace-nowrap`}
           >
             <i className="ri-ticket-fill text-2xl"></i>
             Participate Now

@@ -8,8 +8,8 @@ import { useTokenBalance } from "~~/hooks/useTokenBalance";
 
 // Token addresses and config (deployed on Insectarium network - chainId: 43522)
 const TOKENS: { [key: string]: { address: `0x${string}`; decimals: number } } = {
-  USDT: { address: "0x681E7bb993F3a6f5710f177A45514Ec5b9cd330E", decimals: 6 },
-  USDC: { address: "0x0D651A847C150d0eE1DB767E661E417dB5E2B09a", decimals: 6 },
+  USDT: { address: "0x201fC8Af6FFa65309BaF2b6607ea4ab039661272", decimals: 6 },
+  USDC: { address: "0x76351f7337701d8D8E0100aA8d0aBe50f5be68F9", decimals: 6 },
 };
 
 const MockStakingList: Staking[] = [
@@ -17,7 +17,7 @@ const MockStakingList: Staking[] = [
     id: "1",
     name: "USDT",
     token: "USDT",
-    tokenContract: "0x2F665Cec0DaC0E41112f4eB575077df443B522B1",
+    tokenContract: "0x201fC8Af6FFa65309BaF2b6607ea4ab039661272",
     apr: "1",
     totalDeposits: "111",
     chain: "Memecore",
@@ -29,7 +29,7 @@ const MockStakingList: Staking[] = [
     id: "2",
     name: "USDC",
     token: "USDC",
-    tokenContract: "0x7C81888a24b92C7083507dD0747bcC190102418A",
+    tokenContract: "0x76351f7337701d8D8E0100aA8d0aBe50f5be68F9",
     apr: "1",
     totalDeposits: "$111",
     chain: "Memecore",
@@ -41,7 +41,7 @@ const MockStakingList: Staking[] = [
     id: "3",
     name: "MEMECORE",
     token: "M",
-    tokenContract: "0x1234567890abcdef1234567890abcdef12345678",
+    tokenContract: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
     apr: "2",
     totalDeposits: "$111",
     chain: "Memecore",
