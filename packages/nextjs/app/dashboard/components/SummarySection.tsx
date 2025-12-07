@@ -1,4 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import { formatEther } from "viem";
+import { useAccount, useWriteContract } from "wagmi";
+import TransactionProgressModal from "~~/components/TransactionProgressModal";
+import deployedContracts from "~~/contracts/deployedContracts";
 
 interface Staking {
   stakingPoolId: string;
@@ -22,7 +28,11 @@ interface SummarySectionProps {
   myStakings?: Staking[];
   unclaimedRewards?: UnclaimedRewards;
   isLoading?: boolean;
+  onRewardsClaimed?: () => void;
 }
+
+const REWARDS_MANAGER_ADDRESS = deployedContracts[43522].RewardsManager.address as `0x${string}`;
+const REWARDS_MANAGER_ABI = deployedContracts[43522].RewardsManager.abi;
 
 const TOKEN_ICON_MAP: Record<string, { icon: string; gradient: string }> = {
   USDT: { icon: "ri-coin-fill", gradient: "bg-green-500/20 text-green-400" },
@@ -30,7 +40,23 @@ const TOKEN_ICON_MAP: Record<string, { icon: string; gradient: string }> = {
   WETH: { icon: "ri-coin-fill", gradient: "bg-purple-500/20 text-purple-400" },
 };
 
-export default function SummarySection({ myStakings = [], unclaimedRewards, isLoading }: SummarySectionProps) {
+export default function SummarySection({
+  myStakings = [],
+  unclaimedRewards,
+  isLoading,
+  onRewardsClaimed,
+}: SummarySectionProps) {
+  const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionSteps, setTransactionSteps] = useState<
+    Array<{ id: string; label: string; status: "pending" | "processing" | "completed" | "failed" }>
+  >([
+    { id: "1", label: "Confirm in Wallet", status: "pending" },
+    { id: "2", label: "Wait for Block Confirmation", status: "pending" },
+  ]);
+
   // Calculate total staked in USD (assuming 1:1 for stablecoins, ETH needs price)
   const totalStakedUSD = myStakings.reduce((sum, staking) => {
     const amount = parseFloat(formatEther(BigInt(staking.stakedAmount)));
@@ -42,6 +68,50 @@ export default function SummarySection({ myStakings = [], unclaimedRewards, isLo
   const fixedAprRewardsUSD = unclaimedRewards ? parseFloat(formatEther(BigInt(unclaimedRewards.fixedAprRewards))) : 0;
   const eventPrizesUSD = unclaimedRewards ? parseFloat(formatEther(BigInt(unclaimedRewards.eventPoolPrizes))) : 0;
   const totalUnclaimedUSD = unclaimedRewards ? parseFloat(formatEther(BigInt(unclaimedRewards.totalUnclaimed))) : 0;
+
+  const handleClaimAllRewards = async () => {
+    if (!address || totalUnclaimedUSD === 0) return;
+
+    setTransactionSteps([
+      { id: "1", label: "Confirm in Wallet", status: "processing" },
+      { id: "2", label: "Wait for Block Confirmation", status: "pending" },
+    ]);
+    setShowTransactionModal(true);
+
+    try {
+      await writeContractAsync({
+        address: REWARDS_MANAGER_ADDRESS,
+        abi: REWARDS_MANAGER_ABI,
+        functionName: "claimAll",
+        args: [],
+      });
+
+      setTransactionSteps([
+        { id: "1", label: "Confirm in Wallet", status: "completed" },
+        { id: "2", label: "Wait for Block Confirmation", status: "processing" },
+      ]);
+
+      // 실제 블록 컨펌 대기 시뮬레이션
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      setTransactionSteps([
+        { id: "1", label: "Confirm in Wallet", status: "completed" },
+        { id: "2", label: "Wait for Block Confirmation", status: "completed" },
+      ]);
+
+      setTimeout(() => {
+        setShowTransactionModal(false);
+        if (onRewardsClaimed) {
+          onRewardsClaimed();
+        }
+      }, 2000);
+    } catch (e) {
+      console.error("claimAll error:", e);
+      setTransactionSteps(prev =>
+        prev.map(step => (step.status === "processing" ? { ...step, status: "failed" } : step)),
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -120,7 +190,7 @@ export default function SummarySection({ myStakings = [], unclaimedRewards, isLo
           <p className="text-sm text-gray-400 mb-8">APY Returns + Prizes</p>
 
           {/* Breakdown */}
-          <div className="space-y-4">
+          <div className="space-y-4 mb-6">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-cyan-500/20 rounded-full flex items-center justify-center shrink-0">
@@ -149,8 +219,28 @@ export default function SummarySection({ myStakings = [], unclaimedRewards, isLo
               <span className="text-white font-semibold text-base">$0.00</span>
             </div>
           </div>
+
+          {/* Claim Button */}
+          {totalUnclaimedUSD > 0 && (
+            <button
+              onClick={handleClaimAllRewards}
+              className="w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 hover:shadow-[0_0_20px_rgba(219,39,119,0.6)] rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <i className="ri-hand-coin-fill text-xl"></i>
+              Claim All Rewards
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Transaction Progress Modal */}
+      {showTransactionModal && (
+        <TransactionProgressModal
+          isOpen={showTransactionModal}
+          steps={transactionSteps}
+          onClose={() => setShowTransactionModal(false)}
+        />
+      )}
     </section>
   );
 }
