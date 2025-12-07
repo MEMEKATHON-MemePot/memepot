@@ -95,8 +95,7 @@ export default function MemePotLanding() {
                   <div className="text-6xl font-bold text-purple-400/30 leading-none max-md:text-4xl">03</div>
                   <div className="text-5xl font-bold max-md:text-3xl">Fun</div>
                   <div className="text-lg text-gray-400 leading-relaxed max-md:text-base">
-                    With every project launch, 20% takes a year, we build it to provide the fun and excitement of
-                    continuous events.
+                    we build it to provide the fun and excitement of continuous events.
                   </div>
                 </div>
                 <div className="w-full h-80 flex items-center justify-center max-md:h-64 animate-float">

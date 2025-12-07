@@ -357,8 +357,7 @@ export default function StakingTable({ stakingList, refetchStakings }: StakingTa
             <h3 className="text-white font-semibold text-2xl">Fun</h3>
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">
-            With every project launch, 20% takes a year, we build it to provide the fun and excitement of continuous
-            events.
+            we build it to provide the fun and excitement of continuous events.
           </p>
         </div>
       </div>
