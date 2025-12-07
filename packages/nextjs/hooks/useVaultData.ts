@@ -24,6 +24,10 @@ export function useAllVaults() {
     functionName: "getAllVaultInfos",
   });
 
+  console.log("🏦 [useAllVaults] Loading:", isLoading);
+  console.log("🏦 [useAllVaults] Data:", data);
+  console.log("🏦 [useAllVaults] Error:", error);
+
   return {
     vaults: data as VaultData[] | undefined,
     isLoading,

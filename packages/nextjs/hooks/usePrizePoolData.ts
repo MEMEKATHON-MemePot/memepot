@@ -25,6 +25,10 @@ export function useAllPrizePools() {
     functionName: "getAllEventPools",
   });
 
+  console.log("🎁 [useAllPrizePools] Loading:", isLoading);
+  console.log("🎁 [useAllPrizePools] Data:", data);
+  console.log("🎁 [useAllPrizePools] Error:", error);
+
   return {
     pools: data as PrizePoolData[] | undefined,
     isLoading,
